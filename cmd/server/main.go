@@ -23,9 +23,9 @@ func main() {
 func run() error {
 	cfg := config.GetConfig()
 	l := config.NewLogger(cfg)
-	l.Info("starting server", "config", cfg)
+	l.Info("⚙️ Starting server", "config", cfg)
 
-	wiring := config.NewWiring(cfg)
+	wiring := config.NewWiring(cfg, *l)
 	server := wiring.MustProvideServer()
 
 	errChan := make(chan error)

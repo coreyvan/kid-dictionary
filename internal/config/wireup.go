@@ -1,9 +1,14 @@
 package config
 
-import "github.com/coreyvan/kid-dictionary/internal/transport"
+import (
+	"log/slog"
+
+	"github.com/coreyvan/kid-dictionary/internal/transport"
+)
 
 type Wireup struct {
-	cfg Config
+	cfg    Config
+	logger slog.Logger
 
 	Deps WireupDeps
 }
@@ -16,9 +21,10 @@ type Wiring interface {
 	MustProvideServer() transport.Server
 }
 
-func NewWiring(cfg Config) Wiring {
+func NewWiring(cfg Config, logger slog.Logger) Wiring {
 	return &Wireup{
-		cfg: cfg,
+		cfg:    cfg,
+		logger: logger,
 	}
 }
 
@@ -27,7 +33,7 @@ func (w *Wireup) MustProvideServer() transport.Server {
 		return w.Deps.Transport
 	}
 
-	t := transport.NewServer(w.cfg.BindAddr, w.cfg.Port)
+	t := transport.NewServer(w.cfg.BindAddr, w.cfg.Port, w.logger)
 	w.Deps.Transport = t
 	return t
 }

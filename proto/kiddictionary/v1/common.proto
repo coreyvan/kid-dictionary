@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+package kiddictionary.v1;
+
+import "google/protobuf/timestamp.proto";
+
+// AgeBracket represents the target age group for explanations.
+enum AgeBracket {
+  AGE_BRACKET_UNSPECIFIED = 0;
+  AGE_BRACKET_LITTLE_ONES = 1;    // 0-5 years
+  AGE_BRACKET_GROWING_MINDS = 2;  // 5-10 years
+  AGE_BRACKET_PRE_TEENS = 3;      // 10+ years
+}
+
+// MessageRole indicates who sent a message in a conversation.
+enum MessageRole {
+  MESSAGE_ROLE_UNSPECIFIED = 0;
+  MESSAGE_ROLE_USER = 1;
+  MESSAGE_ROLE_ASSISTANT = 2;
+}
+
+// User represents a registered user.
+message User {
+  string id = 1;
+  string email = 2;
+  AgeBracket default_age_bracket = 3;
+  google.protobuf.Timestamp created_at = 4;
+  google.protobuf.Timestamp updated_at = 5;
+}
+
+// Conversation represents a chat session.
+message Conversation {
+  string id = 1;
+  string user_id = 2;
+  string title = 3;
+  AgeBracket age_bracket = 4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp updated_at = 6;
+}
+
+// Message represents a single message in a conversation.
+message Message {
+  string id = 1;
+  string conversation_id = 2;
+  MessageRole role = 3;
+  string content = 4;
+  google.protobuf.Timestamp created_at = 5;
+}

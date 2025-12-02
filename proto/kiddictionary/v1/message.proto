@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package kiddictionary.v1;
+
+import "kiddictionary/v1/common.proto";
+
+// MessageService handles sending and receiving messages.
+service MessageService {
+  // SendMessage sends a user message and receives an AI response.
+  rpc SendMessage(SendMessageRequest) returns (SendMessageResponse);
+}
+
+message SendMessageRequest {
+  string conversation_id = 1;
+  string content = 2;
+}
+
+message SendMessageResponse {
+  Message user_message = 1;
+  Message assistant_message = 2;
+}

@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+package kiddictionary.v1;
+
+import "kiddictionary/v1/common.proto";
+
+// AuthService handles user authentication.
+service AuthService {
+  // Register creates a new user account.
+  rpc Register(RegisterRequest) returns (RegisterResponse);
+
+  // Login authenticates a user and returns tokens.
+  rpc Login(LoginRequest) returns (LoginResponse);
+
+  // RefreshToken exchanges a refresh token for new access tokens.
+  rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse);
+}
+
+message RegisterRequest {
+  string email = 1;
+  string password = 2;
+  AgeBracket default_age_bracket = 3;
+}
+
+message RegisterResponse {
+  User user = 1;
+  string access_token = 2;
+  string refresh_token = 3;
+}
+
+message LoginRequest {
+  string email = 1;
+  string password = 2;
+}
+
+message LoginResponse {
+  User user = 1;
+  string access_token = 2;
+  string refresh_token = 3;
+}
+
+message RefreshTokenRequest {
+  string refresh_token = 1;
+}
+
+message RefreshTokenResponse {
+  string access_token = 1;
+  string refresh_token = 2;
+}
