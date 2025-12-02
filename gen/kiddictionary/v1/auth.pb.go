@@ -7,6 +7,7 @@
 package kiddictionaryv1
 
 import (
+	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -353,7 +354,7 @@ var File_kiddictionary_v1_auth_proto protoreflect.FileDescriptor
 
 const file_kiddictionary_v1_auth_proto_rawDesc = "" +
 	"\n" +
-	"\x1bkiddictionary/v1/auth.proto\x12\x10kiddictionary.v1\x1a\x1dkiddictionary/v1/common.proto\"\x91\x01\n" +
+	"\x1bkiddictionary/v1/auth.proto\x12\x10kiddictionary.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x1dkiddictionary/v1/common.proto\"\x91\x01\n" +
 	"\x0fRegisterRequest\x12\x14\n" +
 	"\x05email\x18\x01 \x01(\tR\x05email\x12\x1a\n" +
 	"\bpassword\x18\x02 \x01(\tR\bpassword\x12L\n" +
@@ -373,11 +374,11 @@ const file_kiddictionary_v1_auth_proto_rawDesc = "" +
 	"\rrefresh_token\x18\x01 \x01(\tR\frefreshToken\"^\n" +
 	"\x14RefreshTokenResponse\x12!\n" +
 	"\faccess_token\x18\x01 \x01(\tR\vaccessToken\x12#\n" +
-	"\rrefresh_token\x18\x02 \x01(\tR\frefreshToken2\x89\x02\n" +
-	"\vAuthService\x12Q\n" +
-	"\bRegister\x12!.kiddictionary.v1.RegisterRequest\x1a\".kiddictionary.v1.RegisterResponse\x12H\n" +
-	"\x05Login\x12\x1e.kiddictionary.v1.LoginRequest\x1a\x1f.kiddictionary.v1.LoginResponse\x12]\n" +
-	"\fRefreshToken\x12%.kiddictionary.v1.RefreshTokenRequest\x1a&.kiddictionary.v1.RefreshTokenResponseB\xcb\x01\n" +
+	"\rrefresh_token\x18\x02 \x01(\tR\frefreshToken2\xa5\x03\n" +
+	"\vAuthService\x12\x84\x01\n" +
+	"\bRegister\x12!.kiddictionary.v1.RegisterRequest\x1a\".kiddictionary.v1.RegisterResponse\"1\x82\xd3\xe4\x93\x02+:\x01*\"&/kiddictionary.v1.AuthService/Register\x12x\n" +
+	"\x05Login\x12\x1e.kiddictionary.v1.LoginRequest\x1a\x1f.kiddictionary.v1.LoginResponse\".\x82\xd3\xe4\x93\x02(:\x01*\"#/kiddictionary.v1.AuthService/Login\x12\x94\x01\n" +
+	"\fRefreshToken\x12%.kiddictionary.v1.RefreshTokenRequest\x1a&.kiddictionary.v1.RefreshTokenResponse\"5\x82\xd3\xe4\x93\x02/:\x01*\"*/kiddictionary.v1.AuthService/RefreshTokenB\xcb\x01\n" +
 	"\x14com.kiddictionary.v1B\tAuthProtoP\x01ZGgithub.com/coreyvan/kid-dictionary/gen/kiddictionary/v1;kiddictionaryv1\xa2\x02\x03KXX\xaa\x02\x10Kiddictionary.V1\xca\x02\x10Kiddictionary\\V1\xe2\x02\x1cKiddictionary\\V1\\GPBMetadata\xea\x02\x11Kiddictionary::V1b\x06proto3"
 
 var (

@@ -7,6 +7,7 @@
 package kiddictionaryv1
 
 import (
+	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -129,15 +130,15 @@ var File_kiddictionary_v1_message_proto protoreflect.FileDescriptor
 
 const file_kiddictionary_v1_message_proto_rawDesc = "" +
 	"\n" +
-	"\x1ekiddictionary/v1/message.proto\x12\x10kiddictionary.v1\x1a\x1dkiddictionary/v1/common.proto\"W\n" +
+	"\x1ekiddictionary/v1/message.proto\x12\x10kiddictionary.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x1dkiddictionary/v1/common.proto\"W\n" +
 	"\x12SendMessageRequest\x12'\n" +
 	"\x0fconversation_id\x18\x01 \x01(\tR\x0econversationId\x12\x18\n" +
 	"\acontent\x18\x02 \x01(\tR\acontent\"\x9b\x01\n" +
 	"\x13SendMessageResponse\x12<\n" +
 	"\fuser_message\x18\x01 \x01(\v2\x19.kiddictionary.v1.MessageR\vuserMessage\x12F\n" +
-	"\x11assistant_message\x18\x02 \x01(\v2\x19.kiddictionary.v1.MessageR\x10assistantMessage2l\n" +
-	"\x0eMessageService\x12Z\n" +
-	"\vSendMessage\x12$.kiddictionary.v1.SendMessageRequest\x1a%.kiddictionary.v1.SendMessageResponseB\xce\x01\n" +
+	"\x11assistant_message\x18\x02 \x01(\v2\x19.kiddictionary.v1.MessageR\x10assistantMessage2\xa6\x01\n" +
+	"\x0eMessageService\x12\x93\x01\n" +
+	"\vSendMessage\x12$.kiddictionary.v1.SendMessageRequest\x1a%.kiddictionary.v1.SendMessageResponse\"7\x82\xd3\xe4\x93\x021:\x01*\",/kiddictionary.v1.MessageService/SendMessageB\xce\x01\n" +
 	"\x14com.kiddictionary.v1B\fMessageProtoP\x01ZGgithub.com/coreyvan/kid-dictionary/gen/kiddictionary/v1;kiddictionaryv1\xa2\x02\x03KXX\xaa\x02\x10Kiddictionary.V1\xca\x02\x10Kiddictionary\\V1\xe2\x02\x1cKiddictionary\\V1\\GPBMetadata\xea\x02\x11Kiddictionary::V1b\x06proto3"
 
 var (

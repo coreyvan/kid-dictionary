@@ -2,12 +2,18 @@ syntax = "proto3";
 
 package kiddictionary.v1;
 
+import "google/api/annotations.proto";
 import "kiddictionary/v1/common.proto";
 
 // MessageService handles sending and receiving messages.
 service MessageService {
   // SendMessage sends a user message and receives an AI response.
-  rpc SendMessage(SendMessageRequest) returns (SendMessageResponse);
+  rpc SendMessage(SendMessageRequest) returns (SendMessageResponse) {
+    option (google.api.http) = {
+      post: "/kiddictionary.v1.MessageService/SendMessage"
+      body: "*"
+    };
+  }
 }
 
 message SendMessageRequest {

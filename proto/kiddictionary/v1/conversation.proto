@@ -2,21 +2,42 @@ syntax = "proto3";
 
 package kiddictionary.v1;
 
+import "google/api/annotations.proto";
 import "kiddictionary/v1/common.proto";
 
 // ConversationService handles conversation management.
 service ConversationService {
   // CreateConversation starts a new conversation.
-  rpc CreateConversation(CreateConversationRequest) returns (CreateConversationResponse);
+  rpc CreateConversation(CreateConversationRequest) returns (CreateConversationResponse) {
+    option (google.api.http) = {
+      post: "/kiddictionary.v1.ConversationService/CreateConversation"
+      body: "*"
+    };
+  }
 
   // GetConversation retrieves a conversation by ID.
-  rpc GetConversation(GetConversationRequest) returns (GetConversationResponse);
+  rpc GetConversation(GetConversationRequest) returns (GetConversationResponse) {
+    option (google.api.http) = {
+      post: "/kiddictionary.v1.ConversationService/GetConversation"
+      body: "*"
+    };
+  }
 
   // ListConversations returns the user's conversations.
-  rpc ListConversations(ListConversationsRequest) returns (ListConversationsResponse);
+  rpc ListConversations(ListConversationsRequest) returns (ListConversationsResponse) {
+    option (google.api.http) = {
+      post: "/kiddictionary.v1.ConversationService/ListConversations"
+      body: "*"
+    };
+  }
 
   // DeleteConversation removes a conversation and its messages.
-  rpc DeleteConversation(DeleteConversationRequest) returns (DeleteConversationResponse);
+  rpc DeleteConversation(DeleteConversationRequest) returns (DeleteConversationResponse) {
+    option (google.api.http) = {
+      post: "/kiddictionary.v1.ConversationService/DeleteConversation"
+      body: "*"
+    };
+  }
 }
 
 message CreateConversationRequest {

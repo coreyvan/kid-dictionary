@@ -7,6 +7,7 @@
 package kiddictionaryv1
 
 import (
+	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -401,7 +402,7 @@ var File_kiddictionary_v1_conversation_proto protoreflect.FileDescriptor
 
 const file_kiddictionary_v1_conversation_proto_rawDesc = "" +
 	"\n" +
-	"#kiddictionary/v1/conversation.proto\x12\x10kiddictionary.v1\x1a\x1dkiddictionary/v1/common.proto\"p\n" +
+	"#kiddictionary/v1/conversation.proto\x12\x10kiddictionary.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x1dkiddictionary/v1/common.proto\"p\n" +
 	"\x19CreateConversationRequest\x12\x14\n" +
 	"\x05title\x18\x01 \x01(\tR\x05title\x12=\n" +
 	"\vage_bracket\x18\x02 \x01(\x0e2\x1c.kiddictionary.v1.AgeBracketR\n" +
@@ -422,12 +423,12 @@ const file_kiddictionary_v1_conversation_proto_rawDesc = "" +
 	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"+\n" +
 	"\x19DeleteConversationRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"\x1c\n" +
-	"\x1aDeleteConversationResponse2\xcd\x03\n" +
-	"\x13ConversationService\x12o\n" +
-	"\x12CreateConversation\x12+.kiddictionary.v1.CreateConversationRequest\x1a,.kiddictionary.v1.CreateConversationResponse\x12f\n" +
-	"\x0fGetConversation\x12(.kiddictionary.v1.GetConversationRequest\x1a).kiddictionary.v1.GetConversationResponse\x12l\n" +
-	"\x11ListConversations\x12*.kiddictionary.v1.ListConversationsRequest\x1a+.kiddictionary.v1.ListConversationsResponse\x12o\n" +
-	"\x12DeleteConversation\x12+.kiddictionary.v1.DeleteConversationRequest\x1a,.kiddictionary.v1.DeleteConversationResponseB\xd3\x01\n" +
+	"\x1aDeleteConversationResponse2\xe1\x05\n" +
+	"\x13ConversationService\x12\xb4\x01\n" +
+	"\x12CreateConversation\x12+.kiddictionary.v1.CreateConversationRequest\x1a,.kiddictionary.v1.CreateConversationResponse\"C\x82\xd3\xe4\x93\x02=:\x01*\"8/kiddictionary.v1.ConversationService/CreateConversation\x12\xa8\x01\n" +
+	"\x0fGetConversation\x12(.kiddictionary.v1.GetConversationRequest\x1a).kiddictionary.v1.GetConversationResponse\"@\x82\xd3\xe4\x93\x02::\x01*\"5/kiddictionary.v1.ConversationService/GetConversation\x12\xb0\x01\n" +
+	"\x11ListConversations\x12*.kiddictionary.v1.ListConversationsRequest\x1a+.kiddictionary.v1.ListConversationsResponse\"B\x82\xd3\xe4\x93\x02<:\x01*\"7/kiddictionary.v1.ConversationService/ListConversations\x12\xb4\x01\n" +
+	"\x12DeleteConversation\x12+.kiddictionary.v1.DeleteConversationRequest\x1a,.kiddictionary.v1.DeleteConversationResponse\"C\x82\xd3\xe4\x93\x02=:\x01*\"8/kiddictionary.v1.ConversationService/DeleteConversationB\xd3\x01\n" +
 	"\x14com.kiddictionary.v1B\x11ConversationProtoP\x01ZGgithub.com/coreyvan/kid-dictionary/gen/kiddictionary/v1;kiddictionaryv1\xa2\x02\x03KXX\xaa\x02\x10Kiddictionary.V1\xca\x02\x10Kiddictionary\\V1\xe2\x02\x1cKiddictionary\\V1\\GPBMetadata\xea\x02\x11Kiddictionary::V1b\x06proto3"
 
 var (

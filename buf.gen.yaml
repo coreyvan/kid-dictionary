@@ -6,8 +6,12 @@ plugins:
   - remote: buf.build/connectrpc/go
     out: gen
     opt: paths=source_relative
+  - remote: buf.build/grpc-ecosystem/openapiv2
+    out: gen/openapi
 managed:
   enabled: true
+  disable:
+    - module: buf.build/googleapis/googleapis
   override:
     - file_option: go_package_prefix
       value: github.com/coreyvan/kid-dictionary/gen

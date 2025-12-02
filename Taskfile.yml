@@ -22,3 +22,27 @@ tasks:
     cmds:
       - go mod tidy
       - echo "Go module dependencies tidied."
+
+  generate:
+    desc: Generate code from protobuf definitions
+    cmds:
+      - buf dep update
+      - buf generate
+      - echo "Protobuf code generated."
+
+  lint:proto:
+    desc: Lint protobuf definitions
+    cmds:
+      - buf lint
+
+  build:
+    desc: Build the server binary
+    deps: [generate]
+    cmds:
+      - go build -o bin/server ./cmd/server
+
+  run:
+    desc: Run the server
+    deps: [generate]
+    cmds:
+      - go run ./cmd/server
