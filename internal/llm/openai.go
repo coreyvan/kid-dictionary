@@ -11,7 +11,8 @@ import (
 )
 
 const (
-	defaultModel = "gpt-5-nano-2025-08-07"
+	defaultModel     = "gpt-5-nano-2025-08-07"
+	defaultMaxTokens = 512 // Sensible default for kid-friendly explanations
 )
 
 var _ Provider = (*OpenAIProvider)(nil)

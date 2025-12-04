@@ -11,6 +11,8 @@ var (
 	ErrRateLimited         = errors.New("rate limited")
 	ErrProviderUnavailable = errors.New("provider unavailable")
 	ErrTimeout             = errors.New("request timeout")
+	ErrInputTooLong        = errors.New("input exceeds maximum token limit")
+	ErrUserRateLimited     = errors.New("user rate limit exceeded")
 )
 
 // AgeBracket represents the target age group for explanations.
@@ -31,6 +33,7 @@ type Message struct {
 
 // CompletionRequest contains the data needed to generate a completion.
 type CompletionRequest struct {
+	UserID     string     // Used for per-user rate limiting
 	AgeBracket AgeBracket
 	Messages   []Message // Conversation history
 }
