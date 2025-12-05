@@ -1,0 +1,68 @@
+# Config file for air hot reload
+# Documentation: https://github.com/air-verse/air
+
+root = "."
+tmp_dir = "tmp"
+
+[build]
+  # Binary output
+  bin = "./tmp/main"
+
+  # Build command
+  cmd = "go build -o ./tmp/main ./cmd/server"
+
+  # Delay before rebuild (milliseconds)
+  delay = 1000
+
+  # Directories to exclude from watching
+  exclude_dir = ["tmp", "vendor", "node_modules", ".git", "gen", "specs", "docs"]
+
+  # File extensions to exclude
+  exclude_file = []
+
+  # Regex patterns to exclude
+  exclude_regex = ["_test.go"]
+
+  # Watch these extensions
+  include_ext = ["go", "tpl", "tmpl", "html"]
+
+  # Watch these directories (empty = watch root)
+  include_dir = []
+
+  # Kill running process before rebuild
+  kill_delay = "2s"
+
+  # Log output
+  log = "build-errors.log"
+
+  # Enable polling for cross-platform compatibility (required in containers)
+  poll = true
+  poll_interval = 500
+
+  # Rerun binary on rebuild
+  rerun = false
+  rerun_delay = 500
+
+  # Send interrupt signal before killing
+  send_interrupt = false
+
+  # Stop on error
+  stop_on_error = true
+
+[color]
+  # Customize colors
+  build = "yellow"
+  main = "magenta"
+  runner = "green"
+  watcher = "cyan"
+
+[log]
+  # Show timestamp
+  time = false
+
+  # Only show main logs
+  main_only = false
+
+[misc]
+  # Delete tmp directory on exit
+  clean_on_exit = true

@@ -1,0 +1,45 @@
+# Git
+.git/
+.gitignore
+
+# IDE and editors
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Documentation
+*.md
+docs/
+specs/
+
+# Environment files (secrets)
+.env
+.env.*
+!.env.example
+
+# Build artifacts
+bin/
+dist/
+tmp/
+
+# Test artifacts
+coverage/
+*.test
+*.out
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Go vendor (if used)
+vendor/
+
+# Docker files (not needed in context)
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Claude/AI files
+.claude/
+CLAUDE.md

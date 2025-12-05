@@ -1,0 +1,92 @@
+services:
+  # ==========================================================================
+  # PostgreSQL Database
+  # ==========================================================================
+  db:
+    image: postgres:16-alpine
+    container_name: kid-dictionary-db
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-kid_dictionary}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-kid_dictionary}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  # ==========================================================================
+  # Database Migrations (one-shot container)
+  # ==========================================================================
+  migrate:
+    build:
+      context: ./migrations
+      dockerfile: Dockerfile
+    container_name: kid-dictionary-migrate
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./migrations:/app/migrations:ro
+      - ./migrations/dbconfig.yml:/app/dbconfig.yml:ro
+    command: ["up", "-config=dbconfig.yml", "-env=production"]
+    environment:
+      - DATABASE_URL=postgres://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/${DB_NAME:-kid_dictionary}?sslmode=disable
+
+  # ==========================================================================
+  # Application with Hot Reload
+  # ==========================================================================
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: dev
+    container_name: kid-dictionary-app
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    ports:
+      - "${LISTEN_PORT:-8080}:8080"
+    volumes:
+      # Source code mount for hot reload
+      - ./:/app
+      # Named volumes for Go caches (faster than bind mounts)
+      - go_modules:/go/pkg/mod
+      - go_cache:/root/.cache/go-build
+      # Prevent tmp directory conflicts
+      - /app/tmp
+    environment:
+      # Application config
+      - BIND_ADDR=${BIND_ADDR:-0.0.0.0}
+      - LISTEN_PORT=8080
+      - PRETTY_LOG=${PRETTY_LOG:-true}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      # Database config (override host for container networking)
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD:-postgres}
+      - DB_NAME=${DB_NAME:-kid_dictionary}
+      # OpenAI config (passed through from host)
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o-mini}
+    restart: unless-stopped
+
+# ==========================================================================
+# Named Volumes
+# ==========================================================================
+volumes:
+  postgres_data:
+    name: kid-dictionary-postgres-data
+  go_modules:
+    name: kid-dictionary-go-modules
+  go_cache:
+    name: kid-dictionary-go-cache

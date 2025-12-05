@@ -4,11 +4,56 @@ version: '3'
 
 # This taskfile syntax is defined here: https://taskfile.dev/usage/
 
-# this needs to be updated to only affect one shell configuration file, instead of both
 tasks:
   default:
     cmds:
       - task --list-all
+
+  # ===========================================================================
+  # Docker Development Environment
+  # ===========================================================================
+  up:
+    desc: Start the complete development environment (database, migrations, app with hot reload)
+    cmds:
+      - docker compose up -d
+      - echo "Environment started. Run 'task logs' to view logs."
+
+  down:
+    desc: Stop all containers (preserves data)
+    cmds:
+      - docker compose down
+      - echo "Environment stopped. Data preserved in volumes."
+
+  reset:
+    desc: Stop containers and wipe all data (clean slate)
+    cmds:
+      - docker compose down -v
+      - docker compose up -d
+      - echo "Environment reset. Fresh database with migrations applied."
+
+  status:
+    desc: Show container status
+    cmds:
+      - docker compose ps
+
+  logs:
+    desc: Follow all container logs
+    cmds:
+      - docker compose logs -f
+
+  logs:app:
+    desc: Follow app container logs only
+    cmds:
+      - docker compose logs -f app
+
+  db:shell:
+    desc: Open PostgreSQL shell
+    cmds:
+      - docker compose exec db psql -U postgres -d kid_dictionary
+
+  # ===========================================================================
+  # Local Development (without Docker)
+  # ===========================================================================
 
   init:
     desc: Initialize the development environment
