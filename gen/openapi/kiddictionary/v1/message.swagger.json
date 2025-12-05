@@ -79,6 +79,18 @@
         }
       }
     },
+    "v1ContentTier": {
+      "type": "string",
+      "enum": [
+        "CONTENT_TIER_UNSPECIFIED",
+        "CONTENT_TIER_NORMAL",
+        "CONTENT_TIER_SENSITIVE",
+        "CONTENT_TIER_CONTEXTUAL",
+        "CONTENT_TIER_REDIRECT"
+      ],
+      "default": "CONTENT_TIER_UNSPECIFIED",
+      "description": "ContentTier classifies topic sensitivity for response handling.\n\n - CONTENT_TIER_NORMAL: Standard topics - direct explanation\n - CONTENT_TIER_SENSITIVE: Death, divorce, etc. - soft guidance prefix\n - CONTENT_TIER_CONTEXTUAL: Religion, politics - request framing preference\n - CONTENT_TIER_REDIRECT: Harmful or off-purpose - polite decline"
+    },
     "v1Message": {
       "type": "object",
       "properties": {
@@ -97,6 +109,10 @@
         "createdAt": {
           "type": "string",
           "format": "date-time"
+        },
+        "contentTier": {
+          "$ref": "#/definitions/v1ContentTier",
+          "title": "Classification for assistant messages"
         }
       },
       "description": "Message represents a single message in a conversation."

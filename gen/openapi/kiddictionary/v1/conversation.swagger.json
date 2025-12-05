@@ -147,6 +147,39 @@
           "ConversationService"
         ]
       }
+    },
+    "/kiddictionary.v1.ConversationService/UpdateConversation": {
+      "post": {
+        "summary": "UpdateConversation modifies a conversation's title or age bracket.",
+        "operationId": "ConversationService_UpdateConversation",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UpdateConversationResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1UpdateConversationRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ConversationService"
+        ]
+      }
     }
   },
   "definitions": {
@@ -188,6 +221,18 @@
       ],
       "default": "AGE_BRACKET_UNSPECIFIED",
       "description": "AgeBracket represents the target age group for explanations.\n\n - AGE_BRACKET_LITTLE_ONES: 0-5 years\n - AGE_BRACKET_GROWING_MINDS: 5-10 years\n - AGE_BRACKET_PRE_TEENS: 10+ years"
+    },
+    "v1ContentTier": {
+      "type": "string",
+      "enum": [
+        "CONTENT_TIER_UNSPECIFIED",
+        "CONTENT_TIER_NORMAL",
+        "CONTENT_TIER_SENSITIVE",
+        "CONTENT_TIER_CONTEXTUAL",
+        "CONTENT_TIER_REDIRECT"
+      ],
+      "default": "CONTENT_TIER_UNSPECIFIED",
+      "description": "ContentTier classifies topic sensitivity for response handling.\n\n - CONTENT_TIER_NORMAL: Standard topics - direct explanation\n - CONTENT_TIER_SENSITIVE: Death, divorce, etc. - soft guidance prefix\n - CONTENT_TIER_CONTEXTUAL: Religion, politics - request framing preference\n - CONTENT_TIER_REDIRECT: Harmful or off-purpose - polite decline"
     },
     "v1Conversation": {
       "type": "object",
@@ -313,6 +358,10 @@
         "createdAt": {
           "type": "string",
           "format": "date-time"
+        },
+        "contentTier": {
+          "$ref": "#/definitions/v1ContentTier",
+          "title": "Classification for assistant messages"
         }
       },
       "description": "Message represents a single message in a conversation."
@@ -326,6 +375,28 @@
       ],
       "default": "MESSAGE_ROLE_UNSPECIFIED",
       "description": "MessageRole indicates who sent a message in a conversation."
+    },
+    "v1UpdateConversationRequest": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "ageBracket": {
+          "$ref": "#/definitions/v1AgeBracket"
+        }
+      }
+    },
+    "v1UpdateConversationResponse": {
+      "type": "object",
+      "properties": {
+        "conversation": {
+          "$ref": "#/definitions/v1Conversation"
+        }
+      }
     }
   }
 }

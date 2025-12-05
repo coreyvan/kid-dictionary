@@ -10,6 +10,12 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	"github.com/google/uuid"
+	"google.golang.org/protobuf/types/known/timestamppb"
+
+	intconnect "github.com/coreyvan/kid-dictionary/internal/connect"
+	"github.com/coreyvan/kid-dictionary/internal/conversation"
+	"github.com/coreyvan/kid-dictionary/internal/message"
 
 	v1 "github.com/coreyvan/kid-dictionary/gen/kiddictionary/v1"
 	"github.com/coreyvan/kid-dictionary/gen/kiddictionary/v1/kiddictionaryv1connect"
@@ -23,10 +29,13 @@ type Server interface {
 }
 
 type server struct {
-	addr       string
-	readyChan  chan struct{}
-	logger     slog.Logger
-	httpServer *http.Server
+	addr             string
+	readyChan        chan struct{}
+	logger           slog.Logger
+	httpServer       *http.Server
+	conversationSvc  *conversation.Service
+	messageSvc       *message.Service
+	messageRepo      message.Repository
 }
 
 var _ Server = (*server)(nil)
@@ -34,11 +43,14 @@ var _ kiddictionaryv1connect.AuthServiceHandler = (*server)(nil)
 var _ kiddictionaryv1connect.ConversationServiceHandler = (*server)(nil)
 var _ kiddictionaryv1connect.MessageServiceHandler = (*server)(nil)
 
-func NewServer(bindAddr, port string, logger slog.Logger) Server {
+func NewServer(bindAddr, port string, logger slog.Logger, convSvc *conversation.Service, msgSvc *message.Service, msgRepo message.Repository) Server {
 	return &server{
-		addr:      fmt.Sprintf("%s:%s", bindAddr, port),
-		readyChan: make(chan struct{}),
-		logger:    logger,
+		addr:            fmt.Sprintf("%s:%s", bindAddr, port),
+		readyChan:       make(chan struct{}),
+		logger:          logger,
+		conversationSvc: convSvc,
+		messageSvc:      msgSvc,
+		messageRepo:     msgRepo,
 	}
 }
 
@@ -112,21 +124,184 @@ func (s *server) RefreshToken(ctx context.Context, req *connect.Request[v1.Refre
 }
 
 func (s *server) CreateConversation(ctx context.Context, req *connect.Request[v1.CreateConversationRequest]) (*connect.Response[v1.CreateConversationResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, fmt.Errorf("not implemented"))
+	// Map proto age bracket to domain age bracket
+	ageBracket := conversation.AgeBracket(req.Msg.AgeBracket)
+
+	conv, err := s.conversationSvc.CreateConversation(ctx, req.Msg.Title, ageBracket)
+	if err != nil {
+		return nil, intconnect.MapError(err)
+	}
+
+	return connect.NewResponse(&v1.CreateConversationResponse{
+		Conversation: &v1.Conversation{
+			Id:         conv.ID.String(),
+			Title:      conv.Title,
+			AgeBracket: v1.AgeBracket(conv.AgeBracket),
+			CreatedAt:  timestamppb.New(conv.CreatedAt),
+			UpdatedAt:  timestamppb.New(conv.UpdatedAt),
+		},
+	}), nil
 }
 
 func (s *server) GetConversation(ctx context.Context, req *connect.Request[v1.GetConversationRequest]) (*connect.Response[v1.GetConversationResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, fmt.Errorf("not implemented"))
+	convID, err := uuid.Parse(req.Msg.Id)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("invalid id"))
+	}
+
+	conv, err := s.conversationSvc.GetConversation(ctx, convID)
+	if err != nil {
+		return nil, intconnect.MapError(err)
+	}
+
+	// Get messages for this conversation
+	msgs, err := s.messageRepo.GetByConversationID(ctx, convID)
+	if err != nil {
+		return nil, intconnect.MapError(err)
+	}
+
+	// Convert messages to proto
+	protoMsgs := make([]*v1.Message, 0, len(msgs))
+	for _, msg := range msgs {
+		protoMsgs = append(protoMsgs, &v1.Message{
+			Id:             msg.ID.String(),
+			ConversationId: msg.ConversationID.String(),
+			Role:           v1.MessageRole(msg.Role),
+			Content:        msg.Content,
+			ContentTier:    v1.ContentTier(msg.ContentTier),
+			CreatedAt:      timestamppb.New(msg.CreatedAt),
+		})
+	}
+
+	return connect.NewResponse(&v1.GetConversationResponse{
+		Conversation: &v1.Conversation{
+			Id:         conv.ID.String(),
+			Title:      conv.Title,
+			AgeBracket: v1.AgeBracket(conv.AgeBracket),
+			CreatedAt:  timestamppb.New(conv.CreatedAt),
+			UpdatedAt:  timestamppb.New(conv.UpdatedAt),
+		},
+		Messages: protoMsgs,
+	}), nil
 }
 
 func (s *server) ListConversations(ctx context.Context, req *connect.Request[v1.ListConversationsRequest]) (*connect.Response[v1.ListConversationsResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, fmt.Errorf("not implemented"))
+	pageSize := int(req.Msg.PageSize)
+	if pageSize <= 0 {
+		pageSize = 20
+	}
+
+	// Parse page token as offset (simple pagination)
+	offset := 0
+	if req.Msg.PageToken != "" {
+		// Page token is the offset encoded
+		_, err := fmt.Sscanf(req.Msg.PageToken, "%d", &offset)
+		if err != nil {
+			offset = 0
+		}
+	}
+
+	convs, err := s.conversationSvc.ListConversations(ctx, nil, pageSize, offset)
+	if err != nil {
+		return nil, intconnect.MapError(err)
+	}
+
+	// Convert to proto
+	protoConvs := make([]*v1.Conversation, 0, len(convs))
+	for _, conv := range convs {
+		protoConvs = append(protoConvs, &v1.Conversation{
+			Id:         conv.ID.String(),
+			Title:      conv.Title,
+			AgeBracket: v1.AgeBracket(conv.AgeBracket),
+			CreatedAt:  timestamppb.New(conv.CreatedAt),
+			UpdatedAt:  timestamppb.New(conv.UpdatedAt),
+		})
+	}
+
+	// Generate next page token if we got a full page
+	var nextPageToken string
+	if len(convs) == pageSize {
+		nextPageToken = fmt.Sprintf("%d", offset+pageSize)
+	}
+
+	return connect.NewResponse(&v1.ListConversationsResponse{
+		Conversations: protoConvs,
+		NextPageToken: nextPageToken,
+	}), nil
+}
+
+func (s *server) UpdateConversation(ctx context.Context, req *connect.Request[v1.UpdateConversationRequest]) (*connect.Response[v1.UpdateConversationResponse], error) {
+	convID, err := uuid.Parse(req.Msg.Id)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("invalid id"))
+	}
+
+	var title *string
+	if req.Msg.Title != nil {
+		title = req.Msg.Title
+	}
+
+	var ageBracket *conversation.AgeBracket
+	if req.Msg.AgeBracket != nil {
+		ab := conversation.AgeBracket(*req.Msg.AgeBracket)
+		ageBracket = &ab
+	}
+
+	conv, err := s.conversationSvc.UpdateConversation(ctx, convID, title, ageBracket)
+	if err != nil {
+		return nil, intconnect.MapError(err)
+	}
+
+	return connect.NewResponse(&v1.UpdateConversationResponse{
+		Conversation: &v1.Conversation{
+			Id:         conv.ID.String(),
+			Title:      conv.Title,
+			AgeBracket: v1.AgeBracket(conv.AgeBracket),
+			CreatedAt:  timestamppb.New(conv.CreatedAt),
+			UpdatedAt:  timestamppb.New(conv.UpdatedAt),
+		},
+	}), nil
 }
 
 func (s *server) DeleteConversation(ctx context.Context, req *connect.Request[v1.DeleteConversationRequest]) (*connect.Response[v1.DeleteConversationResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, fmt.Errorf("not implemented"))
+	convID, err := uuid.Parse(req.Msg.Id)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("invalid id"))
+	}
+
+	if err := s.conversationSvc.DeleteConversation(ctx, convID); err != nil {
+		return nil, intconnect.MapError(err)
+	}
+
+	return connect.NewResponse(&v1.DeleteConversationResponse{}), nil
 }
 
 func (s *server) SendMessage(ctx context.Context, req *connect.Request[v1.SendMessageRequest]) (*connect.Response[v1.SendMessageResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, fmt.Errorf("not implemented"))
+	conversationID, err := uuid.Parse(req.Msg.ConversationId)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("invalid conversation_id"))
+	}
+
+	result, err := s.messageSvc.SendMessage(ctx, conversationID, req.Msg.Content)
+	if err != nil {
+		return nil, intconnect.MapError(err)
+	}
+
+	return connect.NewResponse(&v1.SendMessageResponse{
+		UserMessage: &v1.Message{
+			Id:             result.UserMessage.ID.String(),
+			ConversationId: result.UserMessage.ConversationID.String(),
+			Role:           v1.MessageRole(result.UserMessage.Role),
+			Content:        result.UserMessage.Content,
+			CreatedAt:      timestamppb.New(result.UserMessage.CreatedAt),
+		},
+		AssistantMessage: &v1.Message{
+			Id:             result.AssistantMessage.ID.String(),
+			ConversationId: result.AssistantMessage.ConversationID.String(),
+			Role:           v1.MessageRole(result.AssistantMessage.Role),
+			Content:        result.AssistantMessage.Content,
+			ContentTier:    v1.ContentTier(result.AssistantMessage.ContentTier),
+			CreatedAt:      timestamppb.New(result.AssistantMessage.CreatedAt),
+		},
+	}), nil
 }

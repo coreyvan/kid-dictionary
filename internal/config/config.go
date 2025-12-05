@@ -11,6 +11,9 @@ type Config struct {
 	// OpenAI configuration
 	OpenAIAPIKey string
 	OpenAIModel  string
+
+	// Database configuration
+	DatabaseURL string
 }
 
 func GetConfig() Config {
@@ -22,5 +25,7 @@ func GetConfig() Config {
 
 		OpenAIAPIKey: env.GetString("OPENAI_API_KEY", ""),
 		OpenAIModel:  env.GetString("OPENAI_MODEL", "gpt-4o-mini"),
+
+		DatabaseURL: env.GetString("DATABASE_URL", ""),
 	}
 }

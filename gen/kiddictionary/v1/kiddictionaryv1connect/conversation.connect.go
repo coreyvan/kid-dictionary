@@ -42,6 +42,9 @@ const (
 	// ConversationServiceListConversationsProcedure is the fully-qualified name of the
 	// ConversationService's ListConversations RPC.
 	ConversationServiceListConversationsProcedure = "/kiddictionary.v1.ConversationService/ListConversations"
+	// ConversationServiceUpdateConversationProcedure is the fully-qualified name of the
+	// ConversationService's UpdateConversation RPC.
+	ConversationServiceUpdateConversationProcedure = "/kiddictionary.v1.ConversationService/UpdateConversation"
 	// ConversationServiceDeleteConversationProcedure is the fully-qualified name of the
 	// ConversationService's DeleteConversation RPC.
 	ConversationServiceDeleteConversationProcedure = "/kiddictionary.v1.ConversationService/DeleteConversation"
@@ -55,6 +58,8 @@ type ConversationServiceClient interface {
 	GetConversation(context.Context, *connect.Request[v1.GetConversationRequest]) (*connect.Response[v1.GetConversationResponse], error)
 	// ListConversations returns the user's conversations.
 	ListConversations(context.Context, *connect.Request[v1.ListConversationsRequest]) (*connect.Response[v1.ListConversationsResponse], error)
+	// UpdateConversation modifies a conversation's title or age bracket.
+	UpdateConversation(context.Context, *connect.Request[v1.UpdateConversationRequest]) (*connect.Response[v1.UpdateConversationResponse], error)
 	// DeleteConversation removes a conversation and its messages.
 	DeleteConversation(context.Context, *connect.Request[v1.DeleteConversationRequest]) (*connect.Response[v1.DeleteConversationResponse], error)
 }
@@ -88,6 +93,12 @@ func NewConversationServiceClient(httpClient connect.HTTPClient, baseURL string,
 			connect.WithSchema(conversationServiceMethods.ByName("ListConversations")),
 			connect.WithClientOptions(opts...),
 		),
+		updateConversation: connect.NewClient[v1.UpdateConversationRequest, v1.UpdateConversationResponse](
+			httpClient,
+			baseURL+ConversationServiceUpdateConversationProcedure,
+			connect.WithSchema(conversationServiceMethods.ByName("UpdateConversation")),
+			connect.WithClientOptions(opts...),
+		),
 		deleteConversation: connect.NewClient[v1.DeleteConversationRequest, v1.DeleteConversationResponse](
 			httpClient,
 			baseURL+ConversationServiceDeleteConversationProcedure,
@@ -102,6 +113,7 @@ type conversationServiceClient struct {
 	createConversation *connect.Client[v1.CreateConversationRequest, v1.CreateConversationResponse]
 	getConversation    *connect.Client[v1.GetConversationRequest, v1.GetConversationResponse]
 	listConversations  *connect.Client[v1.ListConversationsRequest, v1.ListConversationsResponse]
+	updateConversation *connect.Client[v1.UpdateConversationRequest, v1.UpdateConversationResponse]
 	deleteConversation *connect.Client[v1.DeleteConversationRequest, v1.DeleteConversationResponse]
 }
 
@@ -120,6 +132,11 @@ func (c *conversationServiceClient) ListConversations(ctx context.Context, req *
 	return c.listConversations.CallUnary(ctx, req)
 }
 
+// UpdateConversation calls kiddictionary.v1.ConversationService.UpdateConversation.
+func (c *conversationServiceClient) UpdateConversation(ctx context.Context, req *connect.Request[v1.UpdateConversationRequest]) (*connect.Response[v1.UpdateConversationResponse], error) {
+	return c.updateConversation.CallUnary(ctx, req)
+}
+
 // DeleteConversation calls kiddictionary.v1.ConversationService.DeleteConversation.
 func (c *conversationServiceClient) DeleteConversation(ctx context.Context, req *connect.Request[v1.DeleteConversationRequest]) (*connect.Response[v1.DeleteConversationResponse], error) {
 	return c.deleteConversation.CallUnary(ctx, req)
@@ -134,6 +151,8 @@ type ConversationServiceHandler interface {
 	GetConversation(context.Context, *connect.Request[v1.GetConversationRequest]) (*connect.Response[v1.GetConversationResponse], error)
 	// ListConversations returns the user's conversations.
 	ListConversations(context.Context, *connect.Request[v1.ListConversationsRequest]) (*connect.Response[v1.ListConversationsResponse], error)
+	// UpdateConversation modifies a conversation's title or age bracket.
+	UpdateConversation(context.Context, *connect.Request[v1.UpdateConversationRequest]) (*connect.Response[v1.UpdateConversationResponse], error)
 	// DeleteConversation removes a conversation and its messages.
 	DeleteConversation(context.Context, *connect.Request[v1.DeleteConversationRequest]) (*connect.Response[v1.DeleteConversationResponse], error)
 }
@@ -163,6 +182,12 @@ func NewConversationServiceHandler(svc ConversationServiceHandler, opts ...conne
 		connect.WithSchema(conversationServiceMethods.ByName("ListConversations")),
 		connect.WithHandlerOptions(opts...),
 	)
+	conversationServiceUpdateConversationHandler := connect.NewUnaryHandler(
+		ConversationServiceUpdateConversationProcedure,
+		svc.UpdateConversation,
+		connect.WithSchema(conversationServiceMethods.ByName("UpdateConversation")),
+		connect.WithHandlerOptions(opts...),
+	)
 	conversationServiceDeleteConversationHandler := connect.NewUnaryHandler(
 		ConversationServiceDeleteConversationProcedure,
 		svc.DeleteConversation,
@@ -177,6 +202,8 @@ func NewConversationServiceHandler(svc ConversationServiceHandler, opts ...conne
 			conversationServiceGetConversationHandler.ServeHTTP(w, r)
 		case ConversationServiceListConversationsProcedure:
 			conversationServiceListConversationsHandler.ServeHTTP(w, r)
+		case ConversationServiceUpdateConversationProcedure:
+			conversationServiceUpdateConversationHandler.ServeHTTP(w, r)
 		case ConversationServiceDeleteConversationProcedure:
 			conversationServiceDeleteConversationHandler.ServeHTTP(w, r)
 		default:
@@ -198,6 +225,10 @@ func (UnimplementedConversationServiceHandler) GetConversation(context.Context, 
 
 func (UnimplementedConversationServiceHandler) ListConversations(context.Context, *connect.Request[v1.ListConversationsRequest]) (*connect.Response[v1.ListConversationsResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("kiddictionary.v1.ConversationService.ListConversations is not implemented"))
+}
+
+func (UnimplementedConversationServiceHandler) UpdateConversation(context.Context, *connect.Request[v1.UpdateConversationRequest]) (*connect.Response[v1.UpdateConversationResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("kiddictionary.v1.ConversationService.UpdateConversation is not implemented"))
 }
 
 func (UnimplementedConversationServiceHandler) DeleteConversation(context.Context, *connect.Request[v1.DeleteConversationRequest]) (*connect.Response[v1.DeleteConversationResponse], error) {

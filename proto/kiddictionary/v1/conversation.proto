@@ -31,6 +31,14 @@ service ConversationService {
     };
   }
 
+  // UpdateConversation modifies a conversation's title or age bracket.
+  rpc UpdateConversation(UpdateConversationRequest) returns (UpdateConversationResponse) {
+    option (google.api.http) = {
+      post: "/kiddictionary.v1.ConversationService/UpdateConversation"
+      body: "*"
+    };
+  }
+
   // DeleteConversation removes a conversation and its messages.
   rpc DeleteConversation(DeleteConversationRequest) returns (DeleteConversationResponse) {
     option (google.api.http) = {
@@ -66,6 +74,16 @@ message ListConversationsRequest {
 message ListConversationsResponse {
   repeated Conversation conversations = 1;
   string next_page_token = 2;
+}
+
+message UpdateConversationRequest {
+  string id = 1;
+  optional string title = 2;
+  optional AgeBracket age_bracket = 3;
+}
+
+message UpdateConversationResponse {
+  Conversation conversation = 1;
 }
 
 message DeleteConversationRequest {

@@ -19,6 +19,15 @@ enum MessageRole {
   MESSAGE_ROLE_ASSISTANT = 2;
 }
 
+// ContentTier classifies topic sensitivity for response handling.
+enum ContentTier {
+  CONTENT_TIER_UNSPECIFIED = 0;
+  CONTENT_TIER_NORMAL = 1;      // Standard topics - direct explanation
+  CONTENT_TIER_SENSITIVE = 2;   // Death, divorce, etc. - soft guidance prefix
+  CONTENT_TIER_CONTEXTUAL = 3;  // Religion, politics - request framing preference
+  CONTENT_TIER_REDIRECT = 4;    // Harmful or off-purpose - polite decline
+}
+
 // User represents a registered user.
 message User {
   string id = 1;
@@ -45,4 +54,5 @@ message Message {
   MessageRole role = 3;
   string content = 4;
   google.protobuf.Timestamp created_at = 5;
+  ContentTier content_tier = 6; // Classification for assistant messages
 }

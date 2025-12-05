@@ -125,6 +125,62 @@ func (MessageRole) EnumDescriptor() ([]byte, []int) {
 	return file_kiddictionary_v1_common_proto_rawDescGZIP(), []int{1}
 }
 
+// ContentTier classifies topic sensitivity for response handling.
+type ContentTier int32
+
+const (
+	ContentTier_CONTENT_TIER_UNSPECIFIED ContentTier = 0
+	ContentTier_CONTENT_TIER_NORMAL      ContentTier = 1 // Standard topics - direct explanation
+	ContentTier_CONTENT_TIER_SENSITIVE   ContentTier = 2 // Death, divorce, etc. - soft guidance prefix
+	ContentTier_CONTENT_TIER_CONTEXTUAL  ContentTier = 3 // Religion, politics - request framing preference
+	ContentTier_CONTENT_TIER_REDIRECT    ContentTier = 4 // Harmful or off-purpose - polite decline
+)
+
+// Enum value maps for ContentTier.
+var (
+	ContentTier_name = map[int32]string{
+		0: "CONTENT_TIER_UNSPECIFIED",
+		1: "CONTENT_TIER_NORMAL",
+		2: "CONTENT_TIER_SENSITIVE",
+		3: "CONTENT_TIER_CONTEXTUAL",
+		4: "CONTENT_TIER_REDIRECT",
+	}
+	ContentTier_value = map[string]int32{
+		"CONTENT_TIER_UNSPECIFIED": 0,
+		"CONTENT_TIER_NORMAL":      1,
+		"CONTENT_TIER_SENSITIVE":   2,
+		"CONTENT_TIER_CONTEXTUAL":  3,
+		"CONTENT_TIER_REDIRECT":    4,
+	}
+)
+
+func (x ContentTier) Enum() *ContentTier {
+	p := new(ContentTier)
+	*p = x
+	return p
+}
+
+func (x ContentTier) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (ContentTier) Descriptor() protoreflect.EnumDescriptor {
+	return file_kiddictionary_v1_common_proto_enumTypes[2].Descriptor()
+}
+
+func (ContentTier) Type() protoreflect.EnumType {
+	return &file_kiddictionary_v1_common_proto_enumTypes[2]
+}
+
+func (x ContentTier) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use ContentTier.Descriptor instead.
+func (ContentTier) EnumDescriptor() ([]byte, []int) {
+	return file_kiddictionary_v1_common_proto_rawDescGZIP(), []int{2}
+}
+
 // User represents a registered user.
 type User struct {
 	state             protoimpl.MessageState `protogen:"open.v1"`
@@ -295,6 +351,7 @@ type Message struct {
 	Role           MessageRole            `protobuf:"varint,3,opt,name=role,proto3,enum=kiddictionary.v1.MessageRole" json:"role,omitempty"`
 	Content        string                 `protobuf:"bytes,4,opt,name=content,proto3" json:"content,omitempty"`
 	CreatedAt      *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	ContentTier    ContentTier            `protobuf:"varint,6,opt,name=content_tier,json=contentTier,proto3,enum=kiddictionary.v1.ContentTier" json:"content_tier,omitempty"` // Classification for assistant messages
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -364,6 +421,13 @@ func (x *Message) GetCreatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
+func (x *Message) GetContentTier() ContentTier {
+	if x != nil {
+		return x.ContentTier
+	}
+	return ContentTier_CONTENT_TIER_UNSPECIFIED
+}
+
 var File_kiddictionary_v1_common_proto protoreflect.FileDescriptor
 
 const file_kiddictionary_v1_common_proto_rawDesc = "" +
@@ -386,14 +450,15 @@ const file_kiddictionary_v1_common_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
-	"updated_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\xca\x01\n" +
+	"updated_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\x8c\x02\n" +
 	"\aMessage\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12'\n" +
 	"\x0fconversation_id\x18\x02 \x01(\tR\x0econversationId\x121\n" +
 	"\x04role\x18\x03 \x01(\x0e2\x1d.kiddictionary.v1.MessageRoleR\x04role\x12\x18\n" +
 	"\acontent\x18\x04 \x01(\tR\acontent\x129\n" +
 	"\n" +
-	"created_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt*\x80\x01\n" +
+	"created_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x12@\n" +
+	"\fcontent_tier\x18\x06 \x01(\x0e2\x1d.kiddictionary.v1.ContentTierR\vcontentTier*\x80\x01\n" +
 	"\n" +
 	"AgeBracket\x12\x1b\n" +
 	"\x17AGE_BRACKET_UNSPECIFIED\x10\x00\x12\x1b\n" +
@@ -403,7 +468,13 @@ const file_kiddictionary_v1_common_proto_rawDesc = "" +
 	"\vMessageRole\x12\x1c\n" +
 	"\x18MESSAGE_ROLE_UNSPECIFIED\x10\x00\x12\x15\n" +
 	"\x11MESSAGE_ROLE_USER\x10\x01\x12\x1a\n" +
-	"\x16MESSAGE_ROLE_ASSISTANT\x10\x02B\xcd\x01\n" +
+	"\x16MESSAGE_ROLE_ASSISTANT\x10\x02*\x98\x01\n" +
+	"\vContentTier\x12\x1c\n" +
+	"\x18CONTENT_TIER_UNSPECIFIED\x10\x00\x12\x17\n" +
+	"\x13CONTENT_TIER_NORMAL\x10\x01\x12\x1a\n" +
+	"\x16CONTENT_TIER_SENSITIVE\x10\x02\x12\x1b\n" +
+	"\x17CONTENT_TIER_CONTEXTUAL\x10\x03\x12\x19\n" +
+	"\x15CONTENT_TIER_REDIRECT\x10\x04B\xcd\x01\n" +
 	"\x14com.kiddictionary.v1B\vCommonProtoP\x01ZGgithub.com/coreyvan/kid-dictionary/gen/kiddictionary/v1;kiddictionaryv1\xa2\x02\x03KXX\xaa\x02\x10Kiddictionary.V1\xca\x02\x10Kiddictionary\\V1\xe2\x02\x1cKiddictionary\\V1\\GPBMetadata\xea\x02\x11Kiddictionary::V1b\x06proto3"
 
 var (
@@ -418,30 +489,32 @@ func file_kiddictionary_v1_common_proto_rawDescGZIP() []byte {
 	return file_kiddictionary_v1_common_proto_rawDescData
 }
 
-var file_kiddictionary_v1_common_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
+var file_kiddictionary_v1_common_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
 var file_kiddictionary_v1_common_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
 var file_kiddictionary_v1_common_proto_goTypes = []any{
 	(AgeBracket)(0),               // 0: kiddictionary.v1.AgeBracket
 	(MessageRole)(0),              // 1: kiddictionary.v1.MessageRole
-	(*User)(nil),                  // 2: kiddictionary.v1.User
-	(*Conversation)(nil),          // 3: kiddictionary.v1.Conversation
-	(*Message)(nil),               // 4: kiddictionary.v1.Message
-	(*timestamppb.Timestamp)(nil), // 5: google.protobuf.Timestamp
+	(ContentTier)(0),              // 2: kiddictionary.v1.ContentTier
+	(*User)(nil),                  // 3: kiddictionary.v1.User
+	(*Conversation)(nil),          // 4: kiddictionary.v1.Conversation
+	(*Message)(nil),               // 5: kiddictionary.v1.Message
+	(*timestamppb.Timestamp)(nil), // 6: google.protobuf.Timestamp
 }
 var file_kiddictionary_v1_common_proto_depIdxs = []int32{
 	0, // 0: kiddictionary.v1.User.default_age_bracket:type_name -> kiddictionary.v1.AgeBracket
-	5, // 1: kiddictionary.v1.User.created_at:type_name -> google.protobuf.Timestamp
-	5, // 2: kiddictionary.v1.User.updated_at:type_name -> google.protobuf.Timestamp
+	6, // 1: kiddictionary.v1.User.created_at:type_name -> google.protobuf.Timestamp
+	6, // 2: kiddictionary.v1.User.updated_at:type_name -> google.protobuf.Timestamp
 	0, // 3: kiddictionary.v1.Conversation.age_bracket:type_name -> kiddictionary.v1.AgeBracket
-	5, // 4: kiddictionary.v1.Conversation.created_at:type_name -> google.protobuf.Timestamp
-	5, // 5: kiddictionary.v1.Conversation.updated_at:type_name -> google.protobuf.Timestamp
+	6, // 4: kiddictionary.v1.Conversation.created_at:type_name -> google.protobuf.Timestamp
+	6, // 5: kiddictionary.v1.Conversation.updated_at:type_name -> google.protobuf.Timestamp
 	1, // 6: kiddictionary.v1.Message.role:type_name -> kiddictionary.v1.MessageRole
-	5, // 7: kiddictionary.v1.Message.created_at:type_name -> google.protobuf.Timestamp
-	8, // [8:8] is the sub-list for method output_type
-	8, // [8:8] is the sub-list for method input_type
-	8, // [8:8] is the sub-list for extension type_name
-	8, // [8:8] is the sub-list for extension extendee
-	0, // [0:8] is the sub-list for field type_name
+	6, // 7: kiddictionary.v1.Message.created_at:type_name -> google.protobuf.Timestamp
+	2, // 8: kiddictionary.v1.Message.content_tier:type_name -> kiddictionary.v1.ContentTier
+	9, // [9:9] is the sub-list for method output_type
+	9, // [9:9] is the sub-list for method input_type
+	9, // [9:9] is the sub-list for extension type_name
+	9, // [9:9] is the sub-list for extension extendee
+	0, // [0:9] is the sub-list for field type_name
 }
 
 func init() { file_kiddictionary_v1_common_proto_init() }
@@ -454,7 +527,7 @@ func file_kiddictionary_v1_common_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_kiddictionary_v1_common_proto_rawDesc), len(file_kiddictionary_v1_common_proto_rawDesc)),
-			NumEnums:      2,
+			NumEnums:      3,
 			NumMessages:   3,
 			NumExtensions: 0,
 			NumServices:   0,

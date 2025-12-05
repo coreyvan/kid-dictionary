@@ -7,13 +7,12 @@
 package kiddictionaryv1
 
 import (
-	"reflect"
-	"sync"
-	"unsafe"
-
 	_ "google.golang.org/genproto/googleapis/api/annotations"
-	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/runtime/protoimpl"
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	reflect "reflect"
+	sync "sync"
+	unsafe "unsafe"
 )
 
 const (
@@ -319,6 +318,110 @@ func (x *ListConversationsResponse) GetNextPageToken() string {
 	return ""
 }
 
+type UpdateConversationRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Title         *string                `protobuf:"bytes,2,opt,name=title,proto3,oneof" json:"title,omitempty"`
+	AgeBracket    *AgeBracket            `protobuf:"varint,3,opt,name=age_bracket,json=ageBracket,proto3,enum=kiddictionary.v1.AgeBracket,oneof" json:"age_bracket,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateConversationRequest) Reset() {
+	*x = UpdateConversationRequest{}
+	mi := &file_kiddictionary_v1_conversation_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateConversationRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateConversationRequest) ProtoMessage() {}
+
+func (x *UpdateConversationRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_kiddictionary_v1_conversation_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateConversationRequest.ProtoReflect.Descriptor instead.
+func (*UpdateConversationRequest) Descriptor() ([]byte, []int) {
+	return file_kiddictionary_v1_conversation_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *UpdateConversationRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *UpdateConversationRequest) GetTitle() string {
+	if x != nil && x.Title != nil {
+		return *x.Title
+	}
+	return ""
+}
+
+func (x *UpdateConversationRequest) GetAgeBracket() AgeBracket {
+	if x != nil && x.AgeBracket != nil {
+		return *x.AgeBracket
+	}
+	return AgeBracket_AGE_BRACKET_UNSPECIFIED
+}
+
+type UpdateConversationResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Conversation  *Conversation          `protobuf:"bytes,1,opt,name=conversation,proto3" json:"conversation,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateConversationResponse) Reset() {
+	*x = UpdateConversationResponse{}
+	mi := &file_kiddictionary_v1_conversation_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateConversationResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateConversationResponse) ProtoMessage() {}
+
+func (x *UpdateConversationResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_kiddictionary_v1_conversation_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateConversationResponse.ProtoReflect.Descriptor instead.
+func (*UpdateConversationResponse) Descriptor() ([]byte, []int) {
+	return file_kiddictionary_v1_conversation_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *UpdateConversationResponse) GetConversation() *Conversation {
+	if x != nil {
+		return x.Conversation
+	}
+	return nil
+}
+
 type DeleteConversationRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -328,7 +431,7 @@ type DeleteConversationRequest struct {
 
 func (x *DeleteConversationRequest) Reset() {
 	*x = DeleteConversationRequest{}
-	mi := &file_kiddictionary_v1_conversation_proto_msgTypes[6]
+	mi := &file_kiddictionary_v1_conversation_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -340,7 +443,7 @@ func (x *DeleteConversationRequest) String() string {
 func (*DeleteConversationRequest) ProtoMessage() {}
 
 func (x *DeleteConversationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_kiddictionary_v1_conversation_proto_msgTypes[6]
+	mi := &file_kiddictionary_v1_conversation_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -353,7 +456,7 @@ func (x *DeleteConversationRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteConversationRequest.ProtoReflect.Descriptor instead.
 func (*DeleteConversationRequest) Descriptor() ([]byte, []int) {
-	return file_kiddictionary_v1_conversation_proto_rawDescGZIP(), []int{6}
+	return file_kiddictionary_v1_conversation_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *DeleteConversationRequest) GetId() string {
@@ -371,7 +474,7 @@ type DeleteConversationResponse struct {
 
 func (x *DeleteConversationResponse) Reset() {
 	*x = DeleteConversationResponse{}
-	mi := &file_kiddictionary_v1_conversation_proto_msgTypes[7]
+	mi := &file_kiddictionary_v1_conversation_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -383,7 +486,7 @@ func (x *DeleteConversationResponse) String() string {
 func (*DeleteConversationResponse) ProtoMessage() {}
 
 func (x *DeleteConversationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_kiddictionary_v1_conversation_proto_msgTypes[7]
+	mi := &file_kiddictionary_v1_conversation_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -396,7 +499,7 @@ func (x *DeleteConversationResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteConversationResponse.ProtoReflect.Descriptor instead.
 func (*DeleteConversationResponse) Descriptor() ([]byte, []int) {
-	return file_kiddictionary_v1_conversation_proto_rawDescGZIP(), []int{7}
+	return file_kiddictionary_v1_conversation_proto_rawDescGZIP(), []int{9}
 }
 
 var File_kiddictionary_v1_conversation_proto protoreflect.FileDescriptor
@@ -421,14 +524,24 @@ const file_kiddictionary_v1_conversation_proto_rawDesc = "" +
 	"page_token\x18\x02 \x01(\tR\tpageToken\"\x89\x01\n" +
 	"\x19ListConversationsResponse\x12D\n" +
 	"\rconversations\x18\x01 \x03(\v2\x1e.kiddictionary.v1.ConversationR\rconversations\x12&\n" +
-	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"+\n" +
+	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"\xa4\x01\n" +
+	"\x19UpdateConversationRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x19\n" +
+	"\x05title\x18\x02 \x01(\tH\x00R\x05title\x88\x01\x01\x12B\n" +
+	"\vage_bracket\x18\x03 \x01(\x0e2\x1c.kiddictionary.v1.AgeBracketH\x01R\n" +
+	"ageBracket\x88\x01\x01B\b\n" +
+	"\x06_titleB\x0e\n" +
+	"\f_age_bracket\"`\n" +
+	"\x1aUpdateConversationResponse\x12B\n" +
+	"\fconversation\x18\x01 \x01(\v2\x1e.kiddictionary.v1.ConversationR\fconversation\"+\n" +
 	"\x19DeleteConversationRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"\x1c\n" +
-	"\x1aDeleteConversationResponse2\xe1\x05\n" +
+	"\x1aDeleteConversationResponse2\x98\a\n" +
 	"\x13ConversationService\x12\xb4\x01\n" +
 	"\x12CreateConversation\x12+.kiddictionary.v1.CreateConversationRequest\x1a,.kiddictionary.v1.CreateConversationResponse\"C\x82\xd3\xe4\x93\x02=:\x01*\"8/kiddictionary.v1.ConversationService/CreateConversation\x12\xa8\x01\n" +
 	"\x0fGetConversation\x12(.kiddictionary.v1.GetConversationRequest\x1a).kiddictionary.v1.GetConversationResponse\"@\x82\xd3\xe4\x93\x02::\x01*\"5/kiddictionary.v1.ConversationService/GetConversation\x12\xb0\x01\n" +
 	"\x11ListConversations\x12*.kiddictionary.v1.ListConversationsRequest\x1a+.kiddictionary.v1.ListConversationsResponse\"B\x82\xd3\xe4\x93\x02<:\x01*\"7/kiddictionary.v1.ConversationService/ListConversations\x12\xb4\x01\n" +
+	"\x12UpdateConversation\x12+.kiddictionary.v1.UpdateConversationRequest\x1a,.kiddictionary.v1.UpdateConversationResponse\"C\x82\xd3\xe4\x93\x02=:\x01*\"8/kiddictionary.v1.ConversationService/UpdateConversation\x12\xb4\x01\n" +
 	"\x12DeleteConversation\x12+.kiddictionary.v1.DeleteConversationRequest\x1a,.kiddictionary.v1.DeleteConversationResponse\"C\x82\xd3\xe4\x93\x02=:\x01*\"8/kiddictionary.v1.ConversationService/DeleteConversationB\xd3\x01\n" +
 	"\x14com.kiddictionary.v1B\x11ConversationProtoP\x01ZGgithub.com/coreyvan/kid-dictionary/gen/kiddictionary/v1;kiddictionaryv1\xa2\x02\x03KXX\xaa\x02\x10Kiddictionary.V1\xca\x02\x10Kiddictionary\\V1\xe2\x02\x1cKiddictionary\\V1\\GPBMetadata\xea\x02\x11Kiddictionary::V1b\x06proto3"
 
@@ -444,7 +557,7 @@ func file_kiddictionary_v1_conversation_proto_rawDescGZIP() []byte {
 	return file_kiddictionary_v1_conversation_proto_rawDescData
 }
 
-var file_kiddictionary_v1_conversation_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_kiddictionary_v1_conversation_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
 var file_kiddictionary_v1_conversation_proto_goTypes = []any{
 	(*CreateConversationRequest)(nil),  // 0: kiddictionary.v1.CreateConversationRequest
 	(*CreateConversationResponse)(nil), // 1: kiddictionary.v1.CreateConversationResponse
@@ -452,31 +565,37 @@ var file_kiddictionary_v1_conversation_proto_goTypes = []any{
 	(*GetConversationResponse)(nil),    // 3: kiddictionary.v1.GetConversationResponse
 	(*ListConversationsRequest)(nil),   // 4: kiddictionary.v1.ListConversationsRequest
 	(*ListConversationsResponse)(nil),  // 5: kiddictionary.v1.ListConversationsResponse
-	(*DeleteConversationRequest)(nil),  // 6: kiddictionary.v1.DeleteConversationRequest
-	(*DeleteConversationResponse)(nil), // 7: kiddictionary.v1.DeleteConversationResponse
-	(AgeBracket)(0),                    // 8: kiddictionary.v1.AgeBracket
-	(*Conversation)(nil),               // 9: kiddictionary.v1.Conversation
-	(*Message)(nil),                    // 10: kiddictionary.v1.Message
+	(*UpdateConversationRequest)(nil),  // 6: kiddictionary.v1.UpdateConversationRequest
+	(*UpdateConversationResponse)(nil), // 7: kiddictionary.v1.UpdateConversationResponse
+	(*DeleteConversationRequest)(nil),  // 8: kiddictionary.v1.DeleteConversationRequest
+	(*DeleteConversationResponse)(nil), // 9: kiddictionary.v1.DeleteConversationResponse
+	(AgeBracket)(0),                    // 10: kiddictionary.v1.AgeBracket
+	(*Conversation)(nil),               // 11: kiddictionary.v1.Conversation
+	(*Message)(nil),                    // 12: kiddictionary.v1.Message
 }
 var file_kiddictionary_v1_conversation_proto_depIdxs = []int32{
-	8,  // 0: kiddictionary.v1.CreateConversationRequest.age_bracket:type_name -> kiddictionary.v1.AgeBracket
-	9,  // 1: kiddictionary.v1.CreateConversationResponse.conversation:type_name -> kiddictionary.v1.Conversation
-	9,  // 2: kiddictionary.v1.GetConversationResponse.conversation:type_name -> kiddictionary.v1.Conversation
-	10, // 3: kiddictionary.v1.GetConversationResponse.messages:type_name -> kiddictionary.v1.Message
-	9,  // 4: kiddictionary.v1.ListConversationsResponse.conversations:type_name -> kiddictionary.v1.Conversation
-	0,  // 5: kiddictionary.v1.ConversationService.CreateConversation:input_type -> kiddictionary.v1.CreateConversationRequest
-	2,  // 6: kiddictionary.v1.ConversationService.GetConversation:input_type -> kiddictionary.v1.GetConversationRequest
-	4,  // 7: kiddictionary.v1.ConversationService.ListConversations:input_type -> kiddictionary.v1.ListConversationsRequest
-	6,  // 8: kiddictionary.v1.ConversationService.DeleteConversation:input_type -> kiddictionary.v1.DeleteConversationRequest
-	1,  // 9: kiddictionary.v1.ConversationService.CreateConversation:output_type -> kiddictionary.v1.CreateConversationResponse
-	3,  // 10: kiddictionary.v1.ConversationService.GetConversation:output_type -> kiddictionary.v1.GetConversationResponse
-	5,  // 11: kiddictionary.v1.ConversationService.ListConversations:output_type -> kiddictionary.v1.ListConversationsResponse
-	7,  // 12: kiddictionary.v1.ConversationService.DeleteConversation:output_type -> kiddictionary.v1.DeleteConversationResponse
-	9,  // [9:13] is the sub-list for method output_type
-	5,  // [5:9] is the sub-list for method input_type
-	5,  // [5:5] is the sub-list for extension type_name
-	5,  // [5:5] is the sub-list for extension extendee
-	0,  // [0:5] is the sub-list for field type_name
+	10, // 0: kiddictionary.v1.CreateConversationRequest.age_bracket:type_name -> kiddictionary.v1.AgeBracket
+	11, // 1: kiddictionary.v1.CreateConversationResponse.conversation:type_name -> kiddictionary.v1.Conversation
+	11, // 2: kiddictionary.v1.GetConversationResponse.conversation:type_name -> kiddictionary.v1.Conversation
+	12, // 3: kiddictionary.v1.GetConversationResponse.messages:type_name -> kiddictionary.v1.Message
+	11, // 4: kiddictionary.v1.ListConversationsResponse.conversations:type_name -> kiddictionary.v1.Conversation
+	10, // 5: kiddictionary.v1.UpdateConversationRequest.age_bracket:type_name -> kiddictionary.v1.AgeBracket
+	11, // 6: kiddictionary.v1.UpdateConversationResponse.conversation:type_name -> kiddictionary.v1.Conversation
+	0,  // 7: kiddictionary.v1.ConversationService.CreateConversation:input_type -> kiddictionary.v1.CreateConversationRequest
+	2,  // 8: kiddictionary.v1.ConversationService.GetConversation:input_type -> kiddictionary.v1.GetConversationRequest
+	4,  // 9: kiddictionary.v1.ConversationService.ListConversations:input_type -> kiddictionary.v1.ListConversationsRequest
+	6,  // 10: kiddictionary.v1.ConversationService.UpdateConversation:input_type -> kiddictionary.v1.UpdateConversationRequest
+	8,  // 11: kiddictionary.v1.ConversationService.DeleteConversation:input_type -> kiddictionary.v1.DeleteConversationRequest
+	1,  // 12: kiddictionary.v1.ConversationService.CreateConversation:output_type -> kiddictionary.v1.CreateConversationResponse
+	3,  // 13: kiddictionary.v1.ConversationService.GetConversation:output_type -> kiddictionary.v1.GetConversationResponse
+	5,  // 14: kiddictionary.v1.ConversationService.ListConversations:output_type -> kiddictionary.v1.ListConversationsResponse
+	7,  // 15: kiddictionary.v1.ConversationService.UpdateConversation:output_type -> kiddictionary.v1.UpdateConversationResponse
+	9,  // 16: kiddictionary.v1.ConversationService.DeleteConversation:output_type -> kiddictionary.v1.DeleteConversationResponse
+	12, // [12:17] is the sub-list for method output_type
+	7,  // [7:12] is the sub-list for method input_type
+	7,  // [7:7] is the sub-list for extension type_name
+	7,  // [7:7] is the sub-list for extension extendee
+	0,  // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_kiddictionary_v1_conversation_proto_init() }
@@ -485,13 +604,14 @@ func file_kiddictionary_v1_conversation_proto_init() {
 		return
 	}
 	file_kiddictionary_v1_common_proto_init()
+	file_kiddictionary_v1_conversation_proto_msgTypes[6].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_kiddictionary_v1_conversation_proto_rawDesc), len(file_kiddictionary_v1_conversation_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   8,
+			NumMessages:   10,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
