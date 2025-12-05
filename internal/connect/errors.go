@@ -5,9 +5,8 @@ import (
 	"errors"
 
 	"connectrpc.com/connect"
-	"github.com/coreyvan/kid-dictionary/internal/conversation"
+	"github.com/coreyvan/kid-dictionary/internal/domain"
 	"github.com/coreyvan/kid-dictionary/internal/llm"
-	"github.com/coreyvan/kid-dictionary/internal/message"
 )
 
 // User-friendly error messages
@@ -33,25 +32,23 @@ func MapError(err error) *connect.Error {
 		return connect.NewError(connect.CodeDeadlineExceeded, errors.New(msgTimeout))
 	}
 
-	// Conversation errors
-	if errors.Is(err, conversation.ErrNotFound) {
+	// Domain errors
+	if errors.Is(err, domain.ErrNotFound) {
 		return connect.NewError(connect.CodeNotFound, errors.New(msgConversationNotFound))
 	}
-	if errors.Is(err, conversation.ErrInvalidAgeBracket) {
+	if errors.Is(err, domain.ErrInvalidAgeBracket) {
 		return connect.NewError(connect.CodeInvalidArgument, errors.New(msgInvalidAgeBracket))
 	}
-	if errors.Is(err, conversation.ErrTitleRequired) {
+	if errors.Is(err, domain.ErrTitleRequired) {
 		return connect.NewError(connect.CodeInvalidArgument, err)
 	}
-
-	// Message errors
-	if errors.Is(err, message.ErrContentRequired) {
+	if errors.Is(err, domain.ErrEmptyContent) {
 		return connect.NewError(connect.CodeInvalidArgument, errors.New(msgContentRequired))
 	}
-	if errors.Is(err, message.ErrContentTooLong) {
+	if errors.Is(err, domain.ErrContentTooLong) {
 		return connect.NewError(connect.CodeInvalidArgument, errors.New(msgContentTooLong))
 	}
-	if errors.Is(err, message.ErrConversationNotFound) {
+	if errors.Is(err, domain.ErrConversationNotFound) {
 		return connect.NewError(connect.CodeNotFound, errors.New(msgConversationNotFound))
 	}
 

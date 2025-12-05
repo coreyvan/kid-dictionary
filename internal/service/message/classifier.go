@@ -2,6 +2,8 @@ package message
 
 import (
 	"strings"
+
+	"github.com/coreyvan/kid-dictionary/internal/domain"
 )
 
 // Classifier determines the content tier for a user's message.
@@ -86,25 +88,25 @@ var onPurposePatterns = []string{
 }
 
 // Classify determines the content tier for the given message content.
-func (c *Classifier) Classify(content string) ContentTier {
+func (c *Classifier) Classify(content string) domain.ContentTier {
 	lower := strings.ToLower(content)
 
 	// Check for off-purpose requests first
 	if c.isOffPurpose(lower) {
-		return ContentTierRedirect
+		return domain.ContentTierRedirect
 	}
 
 	// Check for contextual topics (religion, politics, etc.)
 	if c.containsAny(lower, contextualKeywords) {
-		return ContentTierContextual
+		return domain.ContentTierContextual
 	}
 
 	// Check for sensitive topics
 	if c.containsAny(lower, sensitiveKeywords) {
-		return ContentTierSensitive
+		return domain.ContentTierSensitive
 	}
 
-	return ContentTierNormal
+	return domain.ContentTierNormal
 }
 
 // isOffPurpose checks if the content is not related to explaining concepts to children.

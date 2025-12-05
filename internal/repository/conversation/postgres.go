@@ -6,15 +6,13 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/coreyvan/kid-dictionary/internal/domain"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// ErrNotFound is returned when a conversation is not found.
-var ErrNotFound = errors.New("conversation not found")
-
-// PostgresRepository implements Repository using PostgreSQL.
+// PostgresRepository implements domain.ConversationRepository using PostgreSQL.
 type PostgresRepository struct {
 	pool *pgxpool.Pool
 }
@@ -25,7 +23,7 @@ func NewPostgresRepository(pool *pgxpool.Pool) *PostgresRepository {
 }
 
 // Create stores a new conversation and populates its ID.
-func (r *PostgresRepository) Create(ctx context.Context, conv *Conversation) error {
+func (r *PostgresRepository) Create(ctx context.Context, conv *domain.Conversation) error {
 	if conv.ID == uuid.Nil {
 		conv.ID = uuid.New()
 	}
@@ -52,7 +50,7 @@ func (r *PostgresRepository) Create(ctx context.Context, conv *Conversation) err
 }
 
 // GetByID retrieves a conversation by its ID.
-func (r *PostgresRepository) GetByID(ctx context.Context, id uuid.UUID) (*Conversation, error) {
+func (r *PostgresRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.Conversation, error) {
 	query := `
 		SELECT id, user_id, title, age_bracket, created_at, updated_at
 		FROM conversations
@@ -60,7 +58,7 @@ func (r *PostgresRepository) GetByID(ctx context.Context, id uuid.UUID) (*Conver
 	`
 	row := r.pool.QueryRow(ctx, query, id)
 
-	conv := &Conversation{}
+	conv := &domain.Conversation{}
 	err := row.Scan(
 		&conv.ID,
 		&conv.UserID,
@@ -70,7 +68,7 @@ func (r *PostgresRepository) GetByID(ctx context.Context, id uuid.UUID) (*Conver
 		&conv.UpdatedAt,
 	)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return nil, ErrNotFound
+		return nil, domain.ErrNotFound
 	}
 	if err != nil {
 		return nil, fmt.Errorf("query conversation: %w", err)
@@ -79,7 +77,7 @@ func (r *PostgresRepository) GetByID(ctx context.Context, id uuid.UUID) (*Conver
 }
 
 // List returns conversations, optionally filtered by user ID.
-func (r *PostgresRepository) List(ctx context.Context, userID *uuid.UUID, limit, offset int) ([]*Conversation, error) {
+func (r *PostgresRepository) List(ctx context.Context, userID *uuid.UUID, limit, offset int) ([]*domain.Conversation, error) {
 	var query string
 	var args []interface{}
 
@@ -108,9 +106,9 @@ func (r *PostgresRepository) List(ctx context.Context, userID *uuid.UUID, limit,
 	}
 	defer rows.Close()
 
-	var conversations []*Conversation
+	var conversations []*domain.Conversation
 	for rows.Next() {
-		conv := &Conversation{}
+		conv := &domain.Conversation{}
 		err := rows.Scan(
 			&conv.ID,
 			&conv.UserID,
@@ -131,7 +129,7 @@ func (r *PostgresRepository) List(ctx context.Context, userID *uuid.UUID, limit,
 }
 
 // Update modifies an existing conversation.
-func (r *PostgresRepository) Update(ctx context.Context, conv *Conversation) error {
+func (r *PostgresRepository) Update(ctx context.Context, conv *domain.Conversation) error {
 	conv.UpdatedAt = time.Now()
 
 	query := `
@@ -149,7 +147,7 @@ func (r *PostgresRepository) Update(ctx context.Context, conv *Conversation) err
 		return fmt.Errorf("update conversation: %w", err)
 	}
 	if result.RowsAffected() == 0 {
-		return ErrNotFound
+		return domain.ErrNotFound
 	}
 	return nil
 }
@@ -162,7 +160,7 @@ func (r *PostgresRepository) Delete(ctx context.Context, id uuid.UUID) error {
 		return fmt.Errorf("delete conversation: %w", err)
 	}
 	if result.RowsAffected() == 0 {
-		return ErrNotFound
+		return domain.ErrNotFound
 	}
 	return nil
 }

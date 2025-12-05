@@ -46,3 +46,42 @@ tasks:
     deps: [generate]
     cmds:
       - go run ./cmd/server
+
+  layer-check:
+    desc: Verify layer boundary compliance (transport->service->repository)
+    cmds:
+      - |
+        echo "Checking layer boundaries..."
+        VIOLATIONS=0
+
+        # Check transport layer doesn't import repository
+        echo "Checking transport layer..."
+        TRANSPORT_IMPORTS=$(go list -f '{{range .Imports}}{{.}}{{"\n"}}{{end}}' ./internal/transport/... 2>/dev/null | grep 'internal/repository' || true)
+        if [ -n "$TRANSPORT_IMPORTS" ]; then
+          echo "  ERROR: Transport imports repository packages:"
+          echo "$TRANSPORT_IMPORTS" | sed 's/^/    /'
+          VIOLATIONS=$((VIOLATIONS + 1))
+        else
+          echo "  OK: Transport does not import repository"
+        fi
+
+        # Check service layer doesn't import transport or repository
+        echo "Checking service layer..."
+        SERVICE_IMPORTS=$(go list -f '{{range .Imports}}{{.}}{{"\n"}}{{end}}' ./internal/service/... 2>/dev/null | grep -E 'internal/(transport|repository)' || true)
+        if [ -n "$SERVICE_IMPORTS" ]; then
+          echo "  ERROR: Service imports transport/repository packages:"
+          echo "$SERVICE_IMPORTS" | sed 's/^/    /'
+          VIOLATIONS=$((VIOLATIONS + 1))
+        else
+          echo "  OK: Service does not import transport or repository"
+        fi
+
+        # Summary
+        echo ""
+        if [ $VIOLATIONS -eq 0 ]; then
+          echo "All layer boundaries are compliant."
+          exit 0
+        else
+          echo "Found $VIOLATIONS layer boundary violation(s)."
+          exit 1
+        fi

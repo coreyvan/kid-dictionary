@@ -8,7 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/coreyvan/kid-dictionary/internal/message"
+	"github.com/coreyvan/kid-dictionary/internal/domain"
+	"github.com/coreyvan/kid-dictionary/internal/repository/message"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/stretchr/testify/assert"
@@ -58,9 +59,9 @@ func TestPostgresRepository_Create(t *testing.T) {
 
 	convID := createTestConversation(t, pool)
 
-	msg := &message.Message{
+	msg := &domain.Message{
 		ConversationID: convID,
-		Role:           message.RoleUser,
+		Role:           domain.RoleUser,
 		Content:        "Why is the sky blue?",
 	}
 
@@ -77,11 +78,11 @@ func TestPostgresRepository_CreateWithContentTier(t *testing.T) {
 
 	convID := createTestConversation(t, pool)
 
-	msg := &message.Message{
+	msg := &domain.Message{
 		ConversationID: convID,
-		Role:           message.RoleAssistant,
+		Role:           domain.RoleAssistant,
 		Content:        "The sky is blue because...",
-		ContentTier:    message.ContentTierNormal,
+		ContentTier:    domain.ContentTierNormal,
 	}
 
 	err := repo.Create(ctx, msg)
@@ -91,7 +92,7 @@ func TestPostgresRepository_CreateWithContentTier(t *testing.T) {
 	msgs, err := repo.GetByConversationID(ctx, convID)
 	require.NoError(t, err)
 	require.Len(t, msgs, 1)
-	assert.Equal(t, message.ContentTierNormal, msgs[0].ContentTier)
+	assert.Equal(t, domain.ContentTierNormal, msgs[0].ContentTier)
 }
 
 func TestPostgresRepository_GetByConversationID(t *testing.T) {
@@ -103,11 +104,11 @@ func TestPostgresRepository_GetByConversationID(t *testing.T) {
 
 	// Create multiple messages
 	for i := 0; i < 5; i++ {
-		role := message.RoleUser
+		role := domain.RoleUser
 		if i%2 == 1 {
-			role = message.RoleAssistant
+			role = domain.RoleAssistant
 		}
-		msg := &message.Message{
+		msg := &domain.Message{
 			ConversationID: convID,
 			Role:           role,
 			Content:        "Test message",
@@ -137,9 +138,9 @@ func TestPostgresRepository_GetRecentByConversationID(t *testing.T) {
 
 	// Create 10 messages
 	for i := 0; i < 10; i++ {
-		msg := &message.Message{
+		msg := &domain.Message{
 			ConversationID: convID,
-			Role:           message.RoleUser,
+			Role:           domain.RoleUser,
 			Content:        "Test message",
 		}
 		err := repo.Create(ctx, msg)

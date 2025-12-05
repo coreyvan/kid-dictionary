@@ -7,7 +7,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/coreyvan/kid-dictionary/internal/conversation"
+	"github.com/coreyvan/kid-dictionary/internal/domain"
+	"github.com/coreyvan/kid-dictionary/internal/repository/conversation"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/stretchr/testify/assert"
@@ -38,9 +39,9 @@ func TestPostgresRepository_CreateAndGet(t *testing.T) {
 	ctx := context.Background()
 
 	// Create a conversation
-	conv := &conversation.Conversation{
+	conv := &domain.Conversation{
 		Title:      "Test Conversation",
-		AgeBracket: conversation.AgeBracketLittleOnes,
+		AgeBracket: domain.AgeBracketLittleOnes,
 	}
 
 	err := repo.Create(ctx, conv)
@@ -66,7 +67,7 @@ func TestPostgresRepository_GetByID_NotFound(t *testing.T) {
 	ctx := context.Background()
 
 	_, err := repo.GetByID(ctx, uuid.New())
-	assert.ErrorIs(t, err, conversation.ErrNotFound)
+	assert.ErrorIs(t, err, domain.ErrNotFound)
 }
 
 func TestPostgresRepository_List(t *testing.T) {
@@ -77,9 +78,9 @@ func TestPostgresRepository_List(t *testing.T) {
 	// Create multiple conversations
 	var ids []uuid.UUID
 	for i := 0; i < 3; i++ {
-		conv := &conversation.Conversation{
+		conv := &domain.Conversation{
 			Title:      "Test Conversation",
-			AgeBracket: conversation.AgeBracket(i + 1),
+			AgeBracket: domain.AgeBracket(i + 1),
 		}
 		err := repo.Create(ctx, conv)
 		require.NoError(t, err)
@@ -104,16 +105,16 @@ func TestPostgresRepository_Update(t *testing.T) {
 	ctx := context.Background()
 
 	// Create a conversation
-	conv := &conversation.Conversation{
+	conv := &domain.Conversation{
 		Title:      "Original Title",
-		AgeBracket: conversation.AgeBracketLittleOnes,
+		AgeBracket: domain.AgeBracketLittleOnes,
 	}
 	err := repo.Create(ctx, conv)
 	require.NoError(t, err)
 
 	// Update the conversation
 	conv.Title = "Updated Title"
-	conv.AgeBracket = conversation.AgeBracketPreTeens
+	conv.AgeBracket = domain.AgeBracketPreTeens
 	err = repo.Update(ctx, conv)
 	require.NoError(t, err)
 
@@ -121,7 +122,7 @@ func TestPostgresRepository_Update(t *testing.T) {
 	got, err := repo.GetByID(ctx, conv.ID)
 	require.NoError(t, err)
 	assert.Equal(t, "Updated Title", got.Title)
-	assert.Equal(t, conversation.AgeBracketPreTeens, got.AgeBracket)
+	assert.Equal(t, domain.AgeBracketPreTeens, got.AgeBracket)
 
 	// Cleanup
 	err = repo.Delete(ctx, conv.ID)
@@ -134,5 +135,5 @@ func TestPostgresRepository_Delete_NotFound(t *testing.T) {
 	ctx := context.Background()
 
 	err := repo.Delete(ctx, uuid.New())
-	assert.ErrorIs(t, err, conversation.ErrNotFound)
+	assert.ErrorIs(t, err, domain.ErrNotFound)
 }

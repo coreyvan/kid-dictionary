@@ -1,4 +1,4 @@
-package message
+package domain
 
 import (
 	"context"
@@ -37,8 +37,14 @@ type Message struct {
 	CreatedAt      time.Time
 }
 
-// Repository defines the interface for message persistence.
-type Repository interface {
+// SendMessageResult contains both the user message and assistant response.
+type SendMessageResult struct {
+	UserMessage      *Message
+	AssistantMessage *Message
+}
+
+// MessageRepository defines the interface for message persistence.
+type MessageRepository interface {
 	// Create stores a new message and returns it with generated ID.
 	Create(ctx context.Context, msg *Message) error
 

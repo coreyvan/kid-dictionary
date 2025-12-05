@@ -5,46 +5,33 @@ import (
 	"errors"
 	"time"
 
-	"github.com/coreyvan/kid-dictionary/internal/conversation"
+	"github.com/coreyvan/kid-dictionary/internal/domain"
 	"github.com/coreyvan/kid-dictionary/internal/llm"
 	"github.com/google/uuid"
 )
 
 const (
-	maxContentLength    = 500
-	maxContextMessages  = 10
-	llmTimeout          = 10 * time.Second
-)
-
-// Service errors.
-var (
-	ErrContentRequired   = errors.New("content is required")
-	ErrContentTooLong    = errors.New("content exceeds maximum length")
-	ErrConversationNotFound = errors.New("conversation not found")
+	maxContentLength   = 500
+	maxContextMessages = 10
+	llmTimeout         = 10 * time.Second
 )
 
 // Service handles message business logic.
 type Service struct {
-	messageRepo      Repository
-	conversationRepo conversation.Repository
+	messageRepo      domain.MessageRepository
+	conversationRepo domain.ConversationRepository
 	llmProvider      llm.Provider
 	classifier       *Classifier
 }
 
 // NewService creates a new message service.
-func NewService(messageRepo Repository, conversationRepo conversation.Repository, llmProvider llm.Provider) *Service {
+func NewService(messageRepo domain.MessageRepository, conversationRepo domain.ConversationRepository, llmProvider llm.Provider) *Service {
 	return &Service{
 		messageRepo:      messageRepo,
 		conversationRepo: conversationRepo,
 		llmProvider:      llmProvider,
 		classifier:       NewClassifier(),
 	}
-}
-
-// SendMessageResult contains both the user message and assistant response.
-type SendMessageResult struct {
-	UserMessage      *Message
-	AssistantMessage *Message
 }
 
 // Response messages for different content tiers.
@@ -57,28 +44,28 @@ const (
 )
 
 // SendMessage sends a user message and generates an AI response.
-func (s *Service) SendMessage(ctx context.Context, conversationID uuid.UUID, content string) (*SendMessageResult, error) {
+func (s *Service) SendMessage(ctx context.Context, conversationID uuid.UUID, content string) (*domain.SendMessageResult, error) {
 	// Validate input
 	if content == "" {
-		return nil, ErrContentRequired
+		return nil, domain.ErrEmptyContent
 	}
 	if len(content) > maxContentLength {
-		return nil, ErrContentTooLong
+		return nil, domain.ErrContentTooLong
 	}
 
 	// Get conversation to determine age bracket
 	conv, err := s.conversationRepo.GetByID(ctx, conversationID)
 	if err != nil {
-		if errors.Is(err, conversation.ErrNotFound) {
-			return nil, ErrConversationNotFound
+		if errors.Is(err, domain.ErrNotFound) {
+			return nil, domain.ErrConversationNotFound
 		}
 		return nil, err
 	}
 
 	// Create and save user message
-	userMsg := &Message{
+	userMsg := &domain.Message{
 		ConversationID: conversationID,
-		Role:           RoleUser,
+		Role:           domain.RoleUser,
 		Content:        content,
 	}
 	if err := s.messageRepo.Create(ctx, userMsg); err != nil {
@@ -89,34 +76,34 @@ func (s *Service) SendMessage(ctx context.Context, conversationID uuid.UUID, con
 	contentTier := s.classifier.Classify(content)
 
 	// Handle off-purpose requests (Tier 4 - Redirect)
-	if contentTier == ContentTierRedirect {
-		assistantMsg := &Message{
+	if contentTier == domain.ContentTierRedirect {
+		assistantMsg := &domain.Message{
 			ConversationID: conversationID,
-			Role:           RoleAssistant,
+			Role:           domain.RoleAssistant,
 			Content:        offPurposeDecline,
-			ContentTier:    ContentTierRedirect,
+			ContentTier:    domain.ContentTierRedirect,
 		}
 		if err := s.messageRepo.Create(ctx, assistantMsg); err != nil {
 			return nil, err
 		}
-		return &SendMessageResult{
+		return &domain.SendMessageResult{
 			UserMessage:      userMsg,
 			AssistantMessage: assistantMsg,
 		}, nil
 	}
 
 	// Handle contextual topics (Tier 3) - request framing preference
-	if contentTier == ContentTierContextual {
-		assistantMsg := &Message{
+	if contentTier == domain.ContentTierContextual {
+		assistantMsg := &domain.Message{
 			ConversationID: conversationID,
-			Role:           RoleAssistant,
+			Role:           domain.RoleAssistant,
 			Content:        contextualFramingRequest,
-			ContentTier:    ContentTierContextual,
+			ContentTier:    domain.ContentTierContextual,
 		}
 		if err := s.messageRepo.Create(ctx, assistantMsg); err != nil {
 			return nil, err
 		}
-		return &SendMessageResult{
+		return &domain.SendMessageResult{
 			UserMessage:      userMsg,
 			AssistantMessage: assistantMsg,
 		}, nil
@@ -132,7 +119,7 @@ func (s *Service) SendMessage(ctx context.Context, conversationID uuid.UUID, con
 	llmMessages := make([]llm.Message, 0, len(history))
 	for _, msg := range history {
 		role := "user"
-		if msg.Role == RoleAssistant {
+		if msg.Role == domain.RoleAssistant {
 			role = "assistant"
 		}
 		llmMessages = append(llmMessages, llm.Message{
@@ -158,14 +145,14 @@ func (s *Service) SendMessage(ctx context.Context, conversationID uuid.UUID, con
 
 	// Apply soft guidance prefix for sensitive topics (Tier 2)
 	responseContent := resp.Content
-	if contentTier == ContentTierSensitive {
+	if contentTier == domain.ContentTierSensitive {
 		responseContent = sensitiveGuidancePrefix + responseContent
 	}
 
 	// Create and save assistant message
-	assistantMsg := &Message{
+	assistantMsg := &domain.Message{
 		ConversationID: conversationID,
-		Role:           RoleAssistant,
+		Role:           domain.RoleAssistant,
 		Content:        responseContent,
 		ContentTier:    contentTier,
 	}
@@ -173,7 +160,7 @@ func (s *Service) SendMessage(ctx context.Context, conversationID uuid.UUID, con
 		return nil, err
 	}
 
-	return &SendMessageResult{
+	return &domain.SendMessageResult{
 		UserMessage:      userMsg,
 		AssistantMessage: assistantMsg,
 	}, nil

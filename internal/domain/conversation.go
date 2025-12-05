@@ -1,4 +1,4 @@
-package conversation
+package domain
 
 import (
 	"context"
@@ -27,8 +27,8 @@ type Conversation struct {
 	UpdatedAt  time.Time
 }
 
-// Repository defines the interface for conversation persistence.
-type Repository interface {
+// ConversationRepository defines the interface for conversation persistence.
+type ConversationRepository interface {
 	// Create stores a new conversation and returns it with generated ID.
 	Create(ctx context.Context, conv *Conversation) error
 

@@ -5,7 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/coreyvan/kid-dictionary/internal/conversation"
+	"github.com/coreyvan/kid-dictionary/internal/domain"
+	"github.com/coreyvan/kid-dictionary/internal/service/conversation"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -13,14 +14,14 @@ import (
 
 // mockRepository is a simple mock for testing the service.
 type mockRepository struct {
-	createFn  func(ctx context.Context, conv *conversation.Conversation) error
-	getByIDFn func(ctx context.Context, id uuid.UUID) (*conversation.Conversation, error)
-	listFn    func(ctx context.Context, userID *uuid.UUID, limit, offset int) ([]*conversation.Conversation, error)
-	updateFn  func(ctx context.Context, conv *conversation.Conversation) error
+	createFn  func(ctx context.Context, conv *domain.Conversation) error
+	getByIDFn func(ctx context.Context, id uuid.UUID) (*domain.Conversation, error)
+	listFn    func(ctx context.Context, userID *uuid.UUID, limit, offset int) ([]*domain.Conversation, error)
+	updateFn  func(ctx context.Context, conv *domain.Conversation) error
 	deleteFn  func(ctx context.Context, id uuid.UUID) error
 }
 
-func (m *mockRepository) Create(ctx context.Context, conv *conversation.Conversation) error {
+func (m *mockRepository) Create(ctx context.Context, conv *domain.Conversation) error {
 	if m.createFn != nil {
 		return m.createFn(ctx, conv)
 	}
@@ -30,21 +31,21 @@ func (m *mockRepository) Create(ctx context.Context, conv *conversation.Conversa
 	return nil
 }
 
-func (m *mockRepository) GetByID(ctx context.Context, id uuid.UUID) (*conversation.Conversation, error) {
+func (m *mockRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.Conversation, error) {
 	if m.getByIDFn != nil {
 		return m.getByIDFn(ctx, id)
 	}
-	return nil, conversation.ErrNotFound
+	return nil, domain.ErrNotFound
 }
 
-func (m *mockRepository) List(ctx context.Context, userID *uuid.UUID, limit, offset int) ([]*conversation.Conversation, error) {
+func (m *mockRepository) List(ctx context.Context, userID *uuid.UUID, limit, offset int) ([]*domain.Conversation, error) {
 	if m.listFn != nil {
 		return m.listFn(ctx, userID, limit, offset)
 	}
 	return nil, nil
 }
 
-func (m *mockRepository) Update(ctx context.Context, conv *conversation.Conversation) error {
+func (m *mockRepository) Update(ctx context.Context, conv *domain.Conversation) error {
 	if m.updateFn != nil {
 		return m.updateFn(ctx, conv)
 	}
@@ -55,7 +56,7 @@ func (m *mockRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	if m.deleteFn != nil {
 		return m.deleteFn(ctx, id)
 	}
-	return conversation.ErrNotFound
+	return domain.ErrNotFound
 }
 
 func TestService_CreateConversation(t *testing.T) {
@@ -63,19 +64,19 @@ func TestService_CreateConversation(t *testing.T) {
 		repo := &mockRepository{}
 		svc := conversation.NewService(repo)
 
-		conv, err := svc.CreateConversation(context.Background(), "Test Title", conversation.AgeBracketLittleOnes)
+		conv, err := svc.CreateConversation(context.Background(), "Test Title", domain.AgeBracketLittleOnes)
 
 		require.NoError(t, err)
 		assert.NotEqual(t, uuid.Nil, conv.ID)
 		assert.Equal(t, "Test Title", conv.Title)
-		assert.Equal(t, conversation.AgeBracketLittleOnes, conv.AgeBracket)
+		assert.Equal(t, domain.AgeBracketLittleOnes, conv.AgeBracket)
 	})
 
 	t.Run("success with empty title uses default", func(t *testing.T) {
 		repo := &mockRepository{}
 		svc := conversation.NewService(repo)
 
-		conv, err := svc.CreateConversation(context.Background(), "", conversation.AgeBracketGrowingMinds)
+		conv, err := svc.CreateConversation(context.Background(), "", domain.AgeBracketGrowingMinds)
 
 		require.NoError(t, err)
 		assert.Equal(t, "New Conversation", conv.Title)
@@ -85,18 +86,18 @@ func TestService_CreateConversation(t *testing.T) {
 		repo := &mockRepository{}
 		svc := conversation.NewService(repo)
 
-		_, err := svc.CreateConversation(context.Background(), "Test", conversation.AgeBracketUnspecified)
+		_, err := svc.CreateConversation(context.Background(), "Test", domain.AgeBracketUnspecified)
 
-		assert.ErrorIs(t, err, conversation.ErrInvalidAgeBracket)
+		assert.ErrorIs(t, err, domain.ErrInvalidAgeBracket)
 	})
 
 	t.Run("error with invalid age bracket", func(t *testing.T) {
 		repo := &mockRepository{}
 		svc := conversation.NewService(repo)
 
-		_, err := svc.CreateConversation(context.Background(), "Test", conversation.AgeBracket(99))
+		_, err := svc.CreateConversation(context.Background(), "Test", domain.AgeBracket(99))
 
-		assert.ErrorIs(t, err, conversation.ErrInvalidAgeBracket)
+		assert.ErrorIs(t, err, domain.ErrInvalidAgeBracket)
 	})
 }
 
@@ -104,11 +105,11 @@ func TestService_GetConversation(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		convID := uuid.New()
 		repo := &mockRepository{
-			getByIDFn: func(ctx context.Context, id uuid.UUID) (*conversation.Conversation, error) {
-				return &conversation.Conversation{
+			getByIDFn: func(ctx context.Context, id uuid.UUID) (*domain.Conversation, error) {
+				return &domain.Conversation{
 					ID:         convID,
 					Title:      "Test",
-					AgeBracket: conversation.AgeBracketPreTeens,
+					AgeBracket: domain.AgeBracketPreTeens,
 				}, nil
 			},
 		}
@@ -126,17 +127,17 @@ func TestService_GetConversation(t *testing.T) {
 
 		_, err := svc.GetConversation(context.Background(), uuid.New())
 
-		assert.ErrorIs(t, err, conversation.ErrNotFound)
+		assert.ErrorIs(t, err, domain.ErrNotFound)
 	})
 }
 
 func TestService_ListConversations(t *testing.T) {
 	t.Run("success with default limit", func(t *testing.T) {
 		repo := &mockRepository{
-			listFn: func(ctx context.Context, userID *uuid.UUID, limit, offset int) ([]*conversation.Conversation, error) {
+			listFn: func(ctx context.Context, userID *uuid.UUID, limit, offset int) ([]*domain.Conversation, error) {
 				assert.Equal(t, 20, limit)
 				assert.Equal(t, 0, offset)
-				return []*conversation.Conversation{
+				return []*domain.Conversation{
 					{ID: uuid.New(), Title: "Conv 1"},
 					{ID: uuid.New(), Title: "Conv 2"},
 				}, nil
@@ -152,7 +153,7 @@ func TestService_ListConversations(t *testing.T) {
 
 	t.Run("respects limit cap", func(t *testing.T) {
 		repo := &mockRepository{
-			listFn: func(ctx context.Context, userID *uuid.UUID, limit, offset int) ([]*conversation.Conversation, error) {
+			listFn: func(ctx context.Context, userID *uuid.UUID, limit, offset int) ([]*domain.Conversation, error) {
 				assert.Equal(t, 100, limit) // Should be capped at 100
 				return nil, nil
 			},
@@ -184,13 +185,13 @@ func TestService_DeleteConversation(t *testing.T) {
 	t.Run("not found", func(t *testing.T) {
 		repo := &mockRepository{
 			deleteFn: func(ctx context.Context, id uuid.UUID) error {
-				return conversation.ErrNotFound
+				return domain.ErrNotFound
 			},
 		}
 		svc := conversation.NewService(repo)
 
 		err := svc.DeleteConversation(context.Background(), uuid.New())
 
-		assert.ErrorIs(t, err, conversation.ErrNotFound)
+		assert.ErrorIs(t, err, domain.ErrNotFound)
 	})
 }

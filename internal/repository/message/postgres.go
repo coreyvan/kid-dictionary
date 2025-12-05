@@ -2,18 +2,15 @@ package message
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
+	"github.com/coreyvan/kid-dictionary/internal/domain"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// ErrNotFound is returned when a message is not found.
-var ErrNotFound = errors.New("message not found")
-
-// PostgresRepository implements Repository using PostgreSQL.
+// PostgresRepository implements domain.MessageRepository using PostgreSQL.
 type PostgresRepository struct {
 	pool *pgxpool.Pool
 }
@@ -24,7 +21,7 @@ func NewPostgresRepository(pool *pgxpool.Pool) *PostgresRepository {
 }
 
 // Create stores a new message and populates its ID.
-func (r *PostgresRepository) Create(ctx context.Context, msg *Message) error {
+func (r *PostgresRepository) Create(ctx context.Context, msg *domain.Message) error {
 	if msg.ID == uuid.Nil {
 		msg.ID = uuid.New()
 	}
@@ -32,7 +29,7 @@ func (r *PostgresRepository) Create(ctx context.Context, msg *Message) error {
 
 	// Convert ContentTier to nullable integer
 	var contentTier *int
-	if msg.ContentTier != ContentTierUnspecified {
+	if msg.ContentTier != domain.ContentTierUnspecified {
 		tier := int(msg.ContentTier)
 		contentTier = &tier
 	}
@@ -56,7 +53,7 @@ func (r *PostgresRepository) Create(ctx context.Context, msg *Message) error {
 }
 
 // GetByConversationID retrieves all messages for a conversation.
-func (r *PostgresRepository) GetByConversationID(ctx context.Context, conversationID uuid.UUID) ([]*Message, error) {
+func (r *PostgresRepository) GetByConversationID(ctx context.Context, conversationID uuid.UUID) ([]*domain.Message, error) {
 	query := `
 		SELECT id, conversation_id, role, content, content_tier, created_at
 		FROM messages
@@ -69,11 +66,11 @@ func (r *PostgresRepository) GetByConversationID(ctx context.Context, conversati
 	}
 	defer rows.Close()
 
-	return scanMessages(rows)
+	return r.scanMessages(rows)
 }
 
 // GetRecentByConversationID retrieves the last N messages for context.
-func (r *PostgresRepository) GetRecentByConversationID(ctx context.Context, conversationID uuid.UUID, limit int) ([]*Message, error) {
+func (r *PostgresRepository) GetRecentByConversationID(ctx context.Context, conversationID uuid.UUID, limit int) ([]*domain.Message, error) {
 	// Use subquery to get last N messages, then order ascending
 	query := `
 		SELECT id, conversation_id, role, content, content_tier, created_at
@@ -92,18 +89,18 @@ func (r *PostgresRepository) GetRecentByConversationID(ctx context.Context, conv
 	}
 	defer rows.Close()
 
-	return scanMessages(rows)
+	return r.scanMessages(rows)
 }
 
 // scanMessages is a helper to scan message rows.
-func scanMessages(rows interface {
+func (r *PostgresRepository) scanMessages(rows interface {
 	Next() bool
 	Scan(dest ...interface{}) error
 	Err() error
-}) ([]*Message, error) {
-	var messages []*Message
+}) ([]*domain.Message, error) {
+	var messages []*domain.Message
 	for rows.Next() {
-		msg := &Message{}
+		msg := &domain.Message{}
 		var contentTier *int
 		err := rows.Scan(
 			&msg.ID,
@@ -117,7 +114,7 @@ func scanMessages(rows interface {
 			return nil, fmt.Errorf("scan message: %w", err)
 		}
 		if contentTier != nil {
-			msg.ContentTier = ContentTier(*contentTier)
+			msg.ContentTier = domain.ContentTier(*contentTier)
 		}
 		messages = append(messages, msg)
 	}

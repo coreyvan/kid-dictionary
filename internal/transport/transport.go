@@ -13,12 +13,12 @@ import (
 	"github.com/google/uuid"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	intconnect "github.com/coreyvan/kid-dictionary/internal/connect"
-	"github.com/coreyvan/kid-dictionary/internal/conversation"
-	"github.com/coreyvan/kid-dictionary/internal/message"
-
 	v1 "github.com/coreyvan/kid-dictionary/gen/kiddictionary/v1"
 	"github.com/coreyvan/kid-dictionary/gen/kiddictionary/v1/kiddictionaryv1connect"
+	intconnect "github.com/coreyvan/kid-dictionary/internal/connect"
+	"github.com/coreyvan/kid-dictionary/internal/domain"
+	conversationsvc "github.com/coreyvan/kid-dictionary/internal/service/conversation"
+	messagesvc "github.com/coreyvan/kid-dictionary/internal/service/message"
 )
 
 type Server interface {
@@ -29,13 +29,13 @@ type Server interface {
 }
 
 type server struct {
-	addr             string
-	readyChan        chan struct{}
-	logger           slog.Logger
-	httpServer       *http.Server
-	conversationSvc  *conversation.Service
-	messageSvc       *message.Service
-	messageRepo      message.Repository
+	addr            string
+	readyChan       chan struct{}
+	logger          slog.Logger
+	httpServer      *http.Server
+	conversationSvc *conversationsvc.Service
+	messageSvc      *messagesvc.Service
+	messageRepo     domain.MessageRepository
 }
 
 var _ Server = (*server)(nil)
@@ -43,7 +43,7 @@ var _ kiddictionaryv1connect.AuthServiceHandler = (*server)(nil)
 var _ kiddictionaryv1connect.ConversationServiceHandler = (*server)(nil)
 var _ kiddictionaryv1connect.MessageServiceHandler = (*server)(nil)
 
-func NewServer(bindAddr, port string, logger slog.Logger, convSvc *conversation.Service, msgSvc *message.Service, msgRepo message.Repository) Server {
+func NewServer(bindAddr, port string, logger slog.Logger, convSvc *conversationsvc.Service, msgSvc *messagesvc.Service, msgRepo domain.MessageRepository) Server {
 	return &server{
 		addr:            fmt.Sprintf("%s:%s", bindAddr, port),
 		readyChan:       make(chan struct{}),
@@ -125,7 +125,7 @@ func (s *server) RefreshToken(ctx context.Context, req *connect.Request[v1.Refre
 
 func (s *server) CreateConversation(ctx context.Context, req *connect.Request[v1.CreateConversationRequest]) (*connect.Response[v1.CreateConversationResponse], error) {
 	// Map proto age bracket to domain age bracket
-	ageBracket := conversation.AgeBracket(req.Msg.AgeBracket)
+	ageBracket := domain.AgeBracket(req.Msg.AgeBracket)
 
 	conv, err := s.conversationSvc.CreateConversation(ctx, req.Msg.Title, ageBracket)
 	if err != nil {
@@ -241,9 +241,9 @@ func (s *server) UpdateConversation(ctx context.Context, req *connect.Request[v1
 		title = req.Msg.Title
 	}
 
-	var ageBracket *conversation.AgeBracket
+	var ageBracket *domain.AgeBracket
 	if req.Msg.AgeBracket != nil {
-		ab := conversation.AgeBracket(*req.Msg.AgeBracket)
+		ab := domain.AgeBracket(*req.Msg.AgeBracket)
 		ageBracket = &ab
 	}
 
