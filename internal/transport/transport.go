@@ -26,6 +26,7 @@ type Server interface {
 	Ready() chan struct{}
 	Shutdown(ctx context.Context) error
 	Addr() (string, error)
+	Handler() http.Handler
 }
 
 type server struct {
@@ -33,6 +34,7 @@ type server struct {
 	readyChan       chan struct{}
 	logger          slog.Logger
 	httpServer      *http.Server
+	handler         http.Handler
 	conversationSvc *conversationsvc.Service
 	messageSvc      *messagesvc.Service
 	messageRepo     domain.MessageRepository
@@ -44,7 +46,7 @@ var _ kiddictionaryv1connect.ConversationServiceHandler = (*server)(nil)
 var _ kiddictionaryv1connect.MessageServiceHandler = (*server)(nil)
 
 func NewServer(bindAddr, port string, logger slog.Logger, convSvc *conversationsvc.Service, msgSvc *messagesvc.Service, msgRepo domain.MessageRepository) Server {
-	return &server{
+	s := &server{
 		addr:            fmt.Sprintf("%s:%s", bindAddr, port),
 		readyChan:       make(chan struct{}),
 		logger:          logger,
@@ -52,9 +54,11 @@ func NewServer(bindAddr, port string, logger slog.Logger, convSvc *conversations
 		messageSvc:      msgSvc,
 		messageRepo:     msgRepo,
 	}
+	s.handler = s.buildHandler()
+	return s
 }
 
-func (s *server) Listen(addr string) error {
+func (s *server) buildHandler() http.Handler {
 	r := chi.NewRouter()
 
 	// Middleware
@@ -86,14 +90,22 @@ func (s *server) Listen(addr string) error {
 	msgPath, msgHandler := kiddictionaryv1connect.NewMessageServiceHandler(s)
 	r.Mount(msgPath, msgHandler)
 
+	return r
+}
+
+func (s *server) Listen(addr string) error {
 	s.httpServer = &http.Server{
 		Addr:    addr,
-		Handler: r,
+		Handler: s.handler,
 	}
 
 	s.logger.Info("☕️ Chi server listening on " + addr)
 	close(s.readyChan)
 	return s.httpServer.ListenAndServe()
+}
+
+func (s *server) Handler() http.Handler {
+	return s.handler
 }
 
 func (s *server) Ready() chan struct{} {

@@ -75,6 +75,12 @@ tasks:
       - buf generate
       - echo "Protobuf code generated."
 
+  generate:mocks:
+    desc: Generate mock implementations using moq
+    cmds:
+      - go generate ./internal/llm/...
+      - echo "Mock implementations generated."
+
   lint:proto:
     desc: Lint protobuf definitions
     cmds:
@@ -91,6 +97,12 @@ tasks:
     deps: [generate]
     cmds:
       - go run ./cmd/server
+
+  test:acceptance:
+    desc: Run acceptance tests (requires database to be running)
+    cmds:
+      - go test ./tests/acceptance/... -v -race
+      - echo "Acceptance tests passed."
 
   layer-check:
     desc: Verify layer boundary compliance (transport->service->repository)

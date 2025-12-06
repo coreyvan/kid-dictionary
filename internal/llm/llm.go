@@ -1,5 +1,7 @@
 package llm
 
+//go:generate moq -out mock_provider.go . Provider
+
 import (
 	"context"
 	"errors"
