@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"time"
 
 	"connectrpc.com/connect"
 	"github.com/go-chi/chi/v5"
@@ -62,7 +63,7 @@ func (s *server) buildHandler() http.Handler {
 	r := chi.NewRouter()
 
 	// Middleware
-	r.Use(middleware.Logger)
+	r.Use(s.requestLogger)
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.RequestID)
 	r.Use(cors.Handler(cors.Options{
@@ -124,6 +125,28 @@ func (s *server) Shutdown(ctx context.Context) error {
 
 func (s *server) Addr() (string, error) {
 	return s.addr, nil
+}
+
+// requestLogger is a middleware that logs HTTP requests using slog at Debug level.
+// This keeps request logs visible in development but silent during tests.
+func (s *server) requestLogger(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
+
+		defer func() {
+			s.logger.Debug("http request",
+				"method", r.Method,
+				"path", r.URL.Path,
+				"status", ww.Status(),
+				"bytes", ww.BytesWritten(),
+				"duration", time.Since(start),
+				"remote", r.RemoteAddr,
+			)
+		}()
+
+		next.ServeHTTP(ww, r)
+	})
 }
 
 func (s *server) Register(ctx context.Context, req *connect.Request[v1.RegisterRequest]) (*connect.Response[v1.RegisterResponse], error) {

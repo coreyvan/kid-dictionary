@@ -102,7 +102,7 @@ tasks:
   test:acceptance:
     desc: Run acceptance tests (requires database to be running)
     cmds:
-      - go test ./tests/acceptance/... -v -race
+      - go test ./tests/acceptance/... -race
       - echo "Acceptance tests passed."
 
   layer-check:
