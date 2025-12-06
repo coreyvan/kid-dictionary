@@ -5,15 +5,16 @@ import (
 	"errors"
 	"time"
 
+	"github.com/google/uuid"
+
 	"github.com/coreyvan/kid-dictionary/internal/domain"
 	"github.com/coreyvan/kid-dictionary/internal/llm"
-	"github.com/google/uuid"
 )
 
 const (
 	maxContentLength   = 500
 	maxContextMessages = 10
-	llmTimeout         = 10 * time.Second
+	llmTimeout         = 60 * time.Second
 )
 
 // Service handles message business logic.
