@@ -5,7 +5,7 @@ import (
 	"os"
 )
 
-func GetString(name string, defaultValue string) string {
+func GetString(name, defaultValue string) string {
 	got := os.Getenv(name)
 	if got == "" {
 		return defaultValue

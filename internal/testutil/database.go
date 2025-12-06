@@ -45,7 +45,7 @@ func NewTestDB(t *testing.T) *pgxpool.Pool {
 	}
 
 	// Close the sql.DB connection - we'll use pgxpool instead
-	db.Close()
+	_ = db.Close()
 
 	// Build connection URL for pgxpool
 	connURL := fmt.Sprintf(

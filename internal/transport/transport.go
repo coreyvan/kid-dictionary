@@ -77,7 +77,10 @@ func (s *server) buildHandler() http.Handler {
 	// Health check
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("ok"))
+		_, err := w.Write([]byte("ok"))
+		if err != nil {
+			s.logger.Error("error writing to health check response", "error", err)
+		}
 	})
 
 	// Mount Connect handlers

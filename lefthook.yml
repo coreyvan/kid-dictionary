@@ -1,0 +1,56 @@
+# Lefthook configuration for kid-dictionary
+# https://github.com/evilmartians/lefthook
+
+# Pre-commit hook: Fast linting on staged files
+pre-commit:
+  parallel: true
+  commands:
+    lint-go:
+      glob: "*.go"
+      run: golangci-lint run --new-from-rev=HEAD ./...
+
+# Pre-push hook: Full validation before pushing
+# Runs sequentially with early exit on failure (piped: true = stop on first failure)
+pre-push:
+  piped: true
+  commands:
+    regenerate-code:
+      run: task generate
+      priority: 1
+    regenerate-mocks:
+      run: task generate:mocks
+      priority: 2
+    check-dirty-after-generate:
+      priority: 3
+      run: |
+        if ! git diff --quiet; then
+          echo "ERROR: Working tree has uncommitted changes after regeneration"
+          echo "The following files were modified:"
+          git status --short
+          echo ""
+          echo "Please commit the generated files and try again."
+          exit 1
+        fi
+    tidy-modules:
+      run: go mod tidy
+      priority: 4
+    check-dirty-after-tidy:
+      priority: 5
+      run: |
+        if ! git diff --quiet; then
+          echo "ERROR: Working tree has uncommitted changes after go mod tidy"
+          echo "The following files were modified:"
+          git status --short
+          echo ""
+          echo "Please commit go.mod/go.sum changes and try again."
+          exit 1
+        fi
+    unit-tests:
+      run: task test:unit
+      priority: 6
+    acceptance-tests:
+      run: task test:acceptance
+      priority: 7
+    build:
+      run: task build
+      priority: 8

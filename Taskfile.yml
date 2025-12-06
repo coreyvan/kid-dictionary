@@ -143,3 +143,46 @@ tasks:
           echo "Found $VIOLATIONS layer boundary violation(s)."
           exit 1
         fi
+
+  # ===========================================================================
+  # Git Hooks (Lefthook)
+  # ===========================================================================
+
+  init:hooks:
+    desc: Install Lefthook and set up git hooks
+    cmds:
+      - go install github.com/evilmartians/lefthook/v2@latest
+      - lefthook install
+      - echo "Git hooks installed successfully."
+
+  # ===========================================================================
+  # Linting
+  # ===========================================================================
+
+  lint:
+    desc: Run golangci-lint on entire codebase
+    cmds:
+      - golangci-lint run ./...
+
+  lint:staged:
+    desc: Run golangci-lint on staged Go files only
+    cmds:
+      - |
+        STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep '\.go$' || true)
+        if [ -z "$STAGED_FILES" ]; then
+          echo "No staged Go files to lint."
+          exit 0
+        fi
+        echo "Linting staged files:"
+        echo "$STAGED_FILES"
+        golangci-lint run $STAGED_FILES
+
+  # ===========================================================================
+  # Testing
+  # ===========================================================================
+
+  test:unit:
+    desc: Run unit tests (excludes acceptance tests)
+    cmds:
+      - go test $(go list ./... | grep -v /tests/acceptance) -race
+      - echo "Unit tests passed."
