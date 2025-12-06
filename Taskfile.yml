@@ -78,6 +78,7 @@ tasks:
   generate:mocks:
     desc: Generate mock implementations using moq
     cmds:
+      - rm -f ./internal/llm/*_mock.go
       - go generate ./internal/llm/...
       - echo "Mock implementations generated."
 

@@ -30,3 +30,6 @@ dist/
 
 # Logs
 *.log
+
+# Mocks
+*_mock.go

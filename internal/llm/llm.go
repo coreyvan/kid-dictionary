@@ -1,6 +1,6 @@
 package llm
 
-//go:generate moq -out mock_provider.go . Provider
+//go:generate moq -out provider_mock.go . Provider
 
 import (
 	"context"
@@ -35,7 +35,7 @@ type Message struct {
 
 // CompletionRequest contains the data needed to generate a completion.
 type CompletionRequest struct {
-	UserID     string     // Used for per-user rate limiting
+	UserID     string // Used for per-user rate limiting
 	AgeBracket AgeBracket
 	Messages   []Message // Conversation history
 }
