@@ -1,27 +1,19 @@
 <!--
 Sync Impact Report
 ==================
-Version change: 0.0.0 → 1.0.0 (initial ratification)
+Version change: 1.0.0 → 1.1.0 (MINOR - new guidance added)
 
-Modified principles: N/A (initial version)
+Modified principles: None
 
 Added sections:
-- Core Principles (5 principles)
-  - I. Protobuf-First API Design
-  - II. Test-Alongside Development
-  - III. Simplicity & YAGNI
-  - IV. Observability
-  - V. Content Safety
-- Additional Constraints
-- Development Workflow
-- Governance
+- Development Workflow > Documentation Maintenance (new subsection)
 
-Removed sections: N/A (initial version)
+Removed sections: None
 
 Templates requiring updates:
-- .specify/templates/plan-template.md ✅ (Constitution Check section compatible)
-- .specify/templates/spec-template.md ✅ (requirements structure compatible)
-- .specify/templates/tasks-template.md ✅ (task phases compatible with principles)
+- .specify/templates/plan-template.md ✅ (no changes needed - Constitution Check compatible)
+- .specify/templates/spec-template.md ✅ (no changes needed)
+- .specify/templates/tasks-template.md ✅ (Polish phase already includes documentation updates)
 
 Follow-up TODOs: None
 -->
@@ -120,6 +112,22 @@ All generated content MUST be appropriate for the specified age bracket.
 - `proto/` - Protocol Buffer definitions
 - `gen/` - Generated code from buf
 
+### Documentation Maintenance
+
+The README.md MUST be kept current with each feature implementation.
+
+- **When to update**: Every feature that changes or adds items relevant to developers who clone the repository
+- **What to include**:
+  - New task commands added to Taskfile.yml
+  - New environment variables or configuration options
+  - Changes to development workflow (e.g., new prerequisites, setup steps)
+  - New API endpoints or capabilities
+  - Changes to architecture or package structure
+- **Review checkpoint**: README updates SHOULD be included in the same PR as the feature implementation
+- **Scope**: Focus on information needed to develop, run, and understand the codebase—not exhaustive feature documentation
+
+**Rationale**: The README is the first point of contact for developers. Outdated documentation wastes time, causes confusion, and erodes trust in the codebase. Keeping it current as part of feature work prevents documentation debt.
+
 ### Quality Gates
 
 - All PRs require passing tests before merge
@@ -149,4 +157,4 @@ All pull requests and code reviews MUST verify compliance with these principles.
 
 Use CLAUDE.md for runtime development guidance specific to tooling and commands.
 
-**Version**: 1.0.0 | **Ratified**: 2025-12-04 | **Last Amended**: 2025-12-04
+**Version**: 1.1.0 | **Ratified**: 2025-12-04 | **Last Amended**: 2025-12-06
