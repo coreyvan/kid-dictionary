@@ -71,10 +71,10 @@ export function getAnonymousConversation(id: string): AnonymousConversation | nu
 }
 
 export function createAnonymousConversation(
+  id: string,
   title: string,
   ageBracket: AgeBracket
 ): AnonymousConversation {
-  const id = crypto.randomUUID()
   const conversation: AnonymousConversation = {
     id,
     title,
@@ -86,7 +86,6 @@ export function createAnonymousConversation(
   const conversations = getAnonymousConversations()
   conversations.unshift(conversation)
   saveAnonymousConversations(conversations)
-  setCurrentAnonymousConversationId(id)
 
   return conversation
 }

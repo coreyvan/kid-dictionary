@@ -18,7 +18,7 @@
   "paths": {
     "/kiddictionary.v1.MessageService/SendMessage": {
       "post": {
-        "summary": "SendMessage sends a user message and receives an AI response.",
+        "summary": "SendMessage sends a user message and receives an AI response.\nIf conversation_id is empty, a new conversation is auto-created.",
         "operationId": "MessageService_SendMessage",
         "responses": {
           "200": {
@@ -79,6 +79,17 @@
         }
       }
     },
+    "v1AgeBracket": {
+      "type": "string",
+      "enum": [
+        "AGE_BRACKET_UNSPECIFIED",
+        "AGE_BRACKET_LITTLE_ONES",
+        "AGE_BRACKET_GROWING_MINDS",
+        "AGE_BRACKET_PRE_TEENS"
+      ],
+      "default": "AGE_BRACKET_UNSPECIFIED",
+      "description": "AgeBracket represents the target age group for explanations.\n\n - AGE_BRACKET_LITTLE_ONES: 0-5 years\n - AGE_BRACKET_GROWING_MINDS: 5-10 years\n - AGE_BRACKET_PRE_TEENS: 10+ years"
+    },
     "v1ContentTier": {
       "type": "string",
       "enum": [
@@ -90,6 +101,32 @@
       ],
       "default": "CONTENT_TIER_UNSPECIFIED",
       "description": "ContentTier classifies topic sensitivity for response handling.\n\n - CONTENT_TIER_NORMAL: Standard topics - direct explanation\n - CONTENT_TIER_SENSITIVE: Death, divorce, etc. - soft guidance prefix\n - CONTENT_TIER_CONTEXTUAL: Religion, politics - request framing preference\n - CONTENT_TIER_REDIRECT: Harmful or off-purpose - polite decline"
+    },
+    "v1Conversation": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "userId": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "ageBracket": {
+          "$ref": "#/definitions/v1AgeBracket"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "description": "Conversation represents a chat session."
     },
     "v1Message": {
       "type": "object",
@@ -131,10 +168,16 @@
       "type": "object",
       "properties": {
         "conversationId": {
-          "type": "string"
+          "type": "string",
+          "description": "conversation_id is optional. If empty, a new conversation is auto-created.\nWhen empty, age_bracket must be provided."
         },
         "content": {
-          "type": "string"
+          "type": "string",
+          "description": "content is required. Must be 1-500 characters."
+        },
+        "ageBracket": {
+          "$ref": "#/definitions/v1AgeBracket",
+          "description": "age_bracket is required when conversation_id is empty.\nIgnored when conversation_id is provided."
         }
       }
     },
@@ -146,6 +189,10 @@
         },
         "assistantMessage": {
           "$ref": "#/definitions/v1Message"
+        },
+        "conversation": {
+          "$ref": "#/definitions/v1Conversation",
+          "description": "conversation is present when a new conversation was auto-created.\nClients should use conversation.id for subsequent messages."
         }
       }
     }

@@ -41,6 +41,7 @@ type Message struct {
 type SendMessageResult struct {
 	UserMessage      *Message
 	AssistantMessage *Message
+	Conversation     *Conversation // Non-nil if conversation was auto-created
 }
 
 // MessageRepository defines the interface for message persistence.

@@ -16,6 +16,8 @@ const (
 	maxContentLength   = 500
 	maxContextMessages = 10
 	llmTimeout         = 60 * time.Second
+	titleTimeout       = 10 * time.Second
+	fallbackTitle      = "New Conversation"
 )
 
 // Service handles message business logic.
@@ -48,7 +50,9 @@ const (
 )
 
 // SendMessage sends a user message and generates an AI response.
-func (s *Service) SendMessage(ctx context.Context, conversationID uuid.UUID, content string) (*domain.SendMessageResult, error) {
+// If conversationID is uuid.Nil, a new conversation is auto-created using ageBracket.
+// The ageBracket parameter is only used when conversationID is nil; it is ignored otherwise.
+func (s *Service) SendMessage(ctx context.Context, conversationID uuid.UUID, content string, ageBracket *domain.AgeBracket) (*domain.SendMessageResult, error) {
 	// Validate input
 	if content == "" {
 		return nil, domain.ErrEmptyContent
@@ -57,14 +61,45 @@ func (s *Service) SendMessage(ctx context.Context, conversationID uuid.UUID, con
 		return nil, domain.ErrContentTooLong
 	}
 
-	// Get conversation to determine age bracket
-	s.logger.Debug("SendMessage", "content", content)
-	conv, err := s.conversationRepo.GetByID(ctx, conversationID)
-	if err != nil {
-		if errors.Is(err, domain.ErrNotFound) {
-			return nil, domain.ErrConversationNotFound
+	s.logger.Debug("SendMessage", "content", content, "conversationID", conversationID)
+
+	var conv *domain.Conversation
+	var autoCreated bool
+
+	// Check if we need to auto-create a conversation
+	if conversationID == uuid.Nil {
+		// Validate age bracket is provided for new conversations
+		if ageBracket == nil || *ageBracket == domain.AgeBracketUnspecified {
+			return nil, domain.ErrAgeBracketRequired
 		}
-		return nil, err
+		if *ageBracket < domain.AgeBracketLittleOnes || *ageBracket > domain.AgeBracketPreTeens {
+			return nil, domain.ErrInvalidAgeBracket
+		}
+
+		// Generate title via LLM with fallback
+		title := s.generateTitleWithFallback(ctx, content)
+
+		// Create the conversation
+		conv = &domain.Conversation{
+			Title:      title,
+			AgeBracket: *ageBracket,
+		}
+		if err := s.conversationRepo.Create(ctx, conv); err != nil {
+			return nil, err
+		}
+		conversationID = conv.ID
+		autoCreated = true
+		s.logger.Info("auto-created conversation", "conversation_id", conv.ID, "title", conv.Title)
+	} else {
+		// Get existing conversation to determine age bracket
+		var err error
+		conv, err = s.conversationRepo.GetByID(ctx, conversationID)
+		if err != nil {
+			if errors.Is(err, domain.ErrNotFound) {
+				return nil, domain.ErrConversationNotFound
+			}
+			return nil, err
+		}
 	}
 
 	// Create and save user message
@@ -165,8 +200,46 @@ func (s *Service) SendMessage(ctx context.Context, conversationID uuid.UUID, con
 		return nil, err
 	}
 
-	return &domain.SendMessageResult{
+	result := &domain.SendMessageResult{
 		UserMessage:      userMsg,
 		AssistantMessage: assistantMsg,
-	}, nil
+	}
+
+	// Include conversation in result if it was auto-created
+	if autoCreated {
+		result.Conversation = conv
+	}
+
+	return result, nil
+}
+
+// generateTitleWithFallback attempts to generate a title via LLM.
+// On any error, it logs the failure and returns the fallback title.
+func (s *Service) generateTitleWithFallback(ctx context.Context, content string) string {
+	start := time.Now()
+
+	titleCtx, cancel := context.WithTimeout(ctx, titleTimeout)
+	defer cancel()
+
+	title, err := s.llmProvider.GenerateTitle(titleCtx, content)
+	latency := time.Since(start)
+
+	if err != nil {
+		s.logger.Warn("title_generation",
+			"event", "title_generation",
+			"success", false,
+			"latency_ms", latency.Milliseconds(),
+			"error", err.Error(),
+		)
+		return fallbackTitle
+	}
+
+	s.logger.Info("title_generation",
+		"event", "title_generation",
+		"success", true,
+		"latency_ms", latency.Milliseconds(),
+		"title", title,
+	)
+
+	return title
 }

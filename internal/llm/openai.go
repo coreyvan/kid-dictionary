@@ -84,6 +84,28 @@ func (p *OpenAIProvider) Complete(ctx context.Context, req CompletionRequest) (C
 	}, nil
 }
 
+// GenerateTitle generates a 3-4 word title from the given message content.
+func (p *OpenAIProvider) GenerateTitle(ctx context.Context, content string) (string, error) {
+	messages := []openai.ChatCompletionMessageParamUnion{
+		openai.SystemMessage(promptTitleGeneration),
+		openai.UserMessage(content),
+	}
+
+	resp, err := p.client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
+		Model:    p.model,
+		Messages: messages,
+	})
+	if err != nil {
+		return "", mapOpenAIError(err)
+	}
+
+	if len(resp.Choices) == 0 {
+		return "", errors.New("no completion choices returned")
+	}
+
+	return resp.Choices[0].Message.Content, nil
+}
+
 // mapOpenAIError converts OpenAI API errors to domain errors.
 func mapOpenAIError(err error) error {
 	var apiErr *openai.Error

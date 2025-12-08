@@ -258,91 +258,6 @@ func (x *User) GetUpdatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
-// Conversation represents a chat session.
-type Conversation struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	UserId        string                 `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	Title         string                 `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty"`
-	AgeBracket    AgeBracket             `protobuf:"varint,4,opt,name=age_bracket,json=ageBracket,proto3,enum=kiddictionary.v1.AgeBracket" json:"age_bracket,omitempty"`
-	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *Conversation) Reset() {
-	*x = Conversation{}
-	mi := &file_kiddictionary_v1_common_proto_msgTypes[1]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *Conversation) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*Conversation) ProtoMessage() {}
-
-func (x *Conversation) ProtoReflect() protoreflect.Message {
-	mi := &file_kiddictionary_v1_common_proto_msgTypes[1]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use Conversation.ProtoReflect.Descriptor instead.
-func (*Conversation) Descriptor() ([]byte, []int) {
-	return file_kiddictionary_v1_common_proto_rawDescGZIP(), []int{1}
-}
-
-func (x *Conversation) GetId() string {
-	if x != nil {
-		return x.Id
-	}
-	return ""
-}
-
-func (x *Conversation) GetUserId() string {
-	if x != nil {
-		return x.UserId
-	}
-	return ""
-}
-
-func (x *Conversation) GetTitle() string {
-	if x != nil {
-		return x.Title
-	}
-	return ""
-}
-
-func (x *Conversation) GetAgeBracket() AgeBracket {
-	if x != nil {
-		return x.AgeBracket
-	}
-	return AgeBracket_AGE_BRACKET_UNSPECIFIED
-}
-
-func (x *Conversation) GetCreatedAt() *timestamppb.Timestamp {
-	if x != nil {
-		return x.CreatedAt
-	}
-	return nil
-}
-
-func (x *Conversation) GetUpdatedAt() *timestamppb.Timestamp {
-	if x != nil {
-		return x.UpdatedAt
-	}
-	return nil
-}
-
 // Message represents a single message in a conversation.
 type Message struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
@@ -358,7 +273,7 @@ type Message struct {
 
 func (x *Message) Reset() {
 	*x = Message{}
-	mi := &file_kiddictionary_v1_common_proto_msgTypes[2]
+	mi := &file_kiddictionary_v1_common_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -370,7 +285,7 @@ func (x *Message) String() string {
 func (*Message) ProtoMessage() {}
 
 func (x *Message) ProtoReflect() protoreflect.Message {
-	mi := &file_kiddictionary_v1_common_proto_msgTypes[2]
+	mi := &file_kiddictionary_v1_common_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -383,7 +298,7 @@ func (x *Message) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Message.ProtoReflect.Descriptor instead.
 func (*Message) Descriptor() ([]byte, []int) {
-	return file_kiddictionary_v1_common_proto_rawDescGZIP(), []int{2}
+	return file_kiddictionary_v1_common_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *Message) GetId() string {
@@ -440,17 +355,7 @@ const file_kiddictionary_v1_common_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
-	"updated_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\x82\x02\n" +
-	"\fConversation\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\x12\x17\n" +
-	"\auser_id\x18\x02 \x01(\tR\x06userId\x12\x14\n" +
-	"\x05title\x18\x03 \x01(\tR\x05title\x12=\n" +
-	"\vage_bracket\x18\x04 \x01(\x0e2\x1c.kiddictionary.v1.AgeBracketR\n" +
-	"ageBracket\x129\n" +
-	"\n" +
-	"created_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
-	"\n" +
-	"updated_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\x8c\x02\n" +
+	"updated_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\x8c\x02\n" +
 	"\aMessage\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12'\n" +
 	"\x0fconversation_id\x18\x02 \x01(\tR\x0econversationId\x121\n" +
@@ -490,31 +395,27 @@ func file_kiddictionary_v1_common_proto_rawDescGZIP() []byte {
 }
 
 var file_kiddictionary_v1_common_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
-var file_kiddictionary_v1_common_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_kiddictionary_v1_common_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_kiddictionary_v1_common_proto_goTypes = []any{
 	(AgeBracket)(0),               // 0: kiddictionary.v1.AgeBracket
 	(MessageRole)(0),              // 1: kiddictionary.v1.MessageRole
 	(ContentTier)(0),              // 2: kiddictionary.v1.ContentTier
 	(*User)(nil),                  // 3: kiddictionary.v1.User
-	(*Conversation)(nil),          // 4: kiddictionary.v1.Conversation
-	(*Message)(nil),               // 5: kiddictionary.v1.Message
-	(*timestamppb.Timestamp)(nil), // 6: google.protobuf.Timestamp
+	(*Message)(nil),               // 4: kiddictionary.v1.Message
+	(*timestamppb.Timestamp)(nil), // 5: google.protobuf.Timestamp
 }
 var file_kiddictionary_v1_common_proto_depIdxs = []int32{
 	0, // 0: kiddictionary.v1.User.default_age_bracket:type_name -> kiddictionary.v1.AgeBracket
-	6, // 1: kiddictionary.v1.User.created_at:type_name -> google.protobuf.Timestamp
-	6, // 2: kiddictionary.v1.User.updated_at:type_name -> google.protobuf.Timestamp
-	0, // 3: kiddictionary.v1.Conversation.age_bracket:type_name -> kiddictionary.v1.AgeBracket
-	6, // 4: kiddictionary.v1.Conversation.created_at:type_name -> google.protobuf.Timestamp
-	6, // 5: kiddictionary.v1.Conversation.updated_at:type_name -> google.protobuf.Timestamp
-	1, // 6: kiddictionary.v1.Message.role:type_name -> kiddictionary.v1.MessageRole
-	6, // 7: kiddictionary.v1.Message.created_at:type_name -> google.protobuf.Timestamp
-	2, // 8: kiddictionary.v1.Message.content_tier:type_name -> kiddictionary.v1.ContentTier
-	9, // [9:9] is the sub-list for method output_type
-	9, // [9:9] is the sub-list for method input_type
-	9, // [9:9] is the sub-list for extension type_name
-	9, // [9:9] is the sub-list for extension extendee
-	0, // [0:9] is the sub-list for field type_name
+	5, // 1: kiddictionary.v1.User.created_at:type_name -> google.protobuf.Timestamp
+	5, // 2: kiddictionary.v1.User.updated_at:type_name -> google.protobuf.Timestamp
+	1, // 3: kiddictionary.v1.Message.role:type_name -> kiddictionary.v1.MessageRole
+	5, // 4: kiddictionary.v1.Message.created_at:type_name -> google.protobuf.Timestamp
+	2, // 5: kiddictionary.v1.Message.content_tier:type_name -> kiddictionary.v1.ContentTier
+	6, // [6:6] is the sub-list for method output_type
+	6, // [6:6] is the sub-list for method input_type
+	6, // [6:6] is the sub-list for extension type_name
+	6, // [6:6] is the sub-list for extension extendee
+	0, // [0:6] is the sub-list for field type_name
 }
 
 func init() { file_kiddictionary_v1_common_proto_init() }
@@ -528,7 +429,7 @@ func file_kiddictionary_v1_common_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_kiddictionary_v1_common_proto_rawDesc), len(file_kiddictionary_v1_common_proto_rawDesc)),
 			NumEnums:      3,
-			NumMessages:   3,
+			NumMessages:   2,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

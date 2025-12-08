@@ -95,6 +95,12 @@ tasks:
     cmds:
       - buf lint
 
+  lint:ts:
+    desc: Run ESLint on TypeScript/Vue frontend
+    dir: frontend
+    cmds:
+      - npm run lint
+
   build:
     desc: Build the server binary
     deps: [generate]
@@ -168,6 +174,15 @@ tasks:
   # ===========================================================================
 
   lint:
+    desc: Run all linters (Go + protobuf)
+    cmds:
+      - task: lint:go
+      - task: lint:proto
+      # TODO: Enable lint:ts once pre-existing ESLint issues are fixed
+      # - task: lint:ts
+      - echo "All linting passed."
+
+  lint:go:
     desc: Run golangci-lint on entire codebase
     cmds:
       - golangci-lint run ./...

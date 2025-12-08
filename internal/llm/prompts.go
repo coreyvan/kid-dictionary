@@ -2,6 +2,9 @@ package llm
 
 // System prompts for each age bracket, based on docs/prompts.md
 
+// promptTitleGeneration is the system prompt for generating conversation titles.
+const promptTitleGeneration = `Summarize the following question in 3-4 words. Output only the title, no punctuation, no quotes.`
+
 const promptLittleOnes = `You help adults explain concepts to very young children (ages 0-5).
 
 Guidelines:

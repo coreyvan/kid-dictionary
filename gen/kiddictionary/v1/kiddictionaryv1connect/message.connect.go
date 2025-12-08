@@ -41,6 +41,7 @@ const (
 // MessageServiceClient is a client for the kiddictionary.v1.MessageService service.
 type MessageServiceClient interface {
 	// SendMessage sends a user message and receives an AI response.
+	// If conversation_id is empty, a new conversation is auto-created.
 	SendMessage(context.Context, *connect.Request[v1.SendMessageRequest]) (*connect.Response[v1.SendMessageResponse], error)
 }
 
@@ -77,6 +78,7 @@ func (c *messageServiceClient) SendMessage(ctx context.Context, req *connect.Req
 // MessageServiceHandler is an implementation of the kiddictionary.v1.MessageService service.
 type MessageServiceHandler interface {
 	// SendMessage sends a user message and receives an AI response.
+	// If conversation_id is empty, a new conversation is auto-created.
 	SendMessage(context.Context, *connect.Request[v1.SendMessageRequest]) (*connect.Response[v1.SendMessageResponse], error)
 }
 

@@ -23,11 +23,17 @@ const (
 )
 
 type SendMessageRequest struct {
-	state          protoimpl.MessageState `protogen:"open.v1"`
-	ConversationId string                 `protobuf:"bytes,1,opt,name=conversation_id,json=conversationId,proto3" json:"conversation_id,omitempty"`
-	Content        string                 `protobuf:"bytes,2,opt,name=content,proto3" json:"content,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// conversation_id is optional. If empty, a new conversation is auto-created.
+	// When empty, age_bracket must be provided.
+	ConversationId string `protobuf:"bytes,1,opt,name=conversation_id,json=conversationId,proto3" json:"conversation_id,omitempty"`
+	// content is required. Must be 1-500 characters.
+	Content string `protobuf:"bytes,2,opt,name=content,proto3" json:"content,omitempty"`
+	// age_bracket is required when conversation_id is empty.
+	// Ignored when conversation_id is provided.
+	AgeBracket    AgeBracket `protobuf:"varint,3,opt,name=age_bracket,json=ageBracket,proto3,enum=kiddictionary.v1.AgeBracket" json:"age_bracket,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *SendMessageRequest) Reset() {
@@ -74,12 +80,22 @@ func (x *SendMessageRequest) GetContent() string {
 	return ""
 }
 
+func (x *SendMessageRequest) GetAgeBracket() AgeBracket {
+	if x != nil {
+		return x.AgeBracket
+	}
+	return AgeBracket_AGE_BRACKET_UNSPECIFIED
+}
+
 type SendMessageResponse struct {
 	state            protoimpl.MessageState `protogen:"open.v1"`
 	UserMessage      *Message               `protobuf:"bytes,1,opt,name=user_message,json=userMessage,proto3" json:"user_message,omitempty"`
 	AssistantMessage *Message               `protobuf:"bytes,2,opt,name=assistant_message,json=assistantMessage,proto3" json:"assistant_message,omitempty"`
-	unknownFields    protoimpl.UnknownFields
-	sizeCache        protoimpl.SizeCache
+	// conversation is present when a new conversation was auto-created.
+	// Clients should use conversation.id for subsequent messages.
+	Conversation  *Conversation `protobuf:"bytes,3,opt,name=conversation,proto3" json:"conversation,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *SendMessageResponse) Reset() {
@@ -126,17 +142,27 @@ func (x *SendMessageResponse) GetAssistantMessage() *Message {
 	return nil
 }
 
+func (x *SendMessageResponse) GetConversation() *Conversation {
+	if x != nil {
+		return x.Conversation
+	}
+	return nil
+}
+
 var File_kiddictionary_v1_message_proto protoreflect.FileDescriptor
 
 const file_kiddictionary_v1_message_proto_rawDesc = "" +
 	"\n" +
-	"\x1ekiddictionary/v1/message.proto\x12\x10kiddictionary.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x1dkiddictionary/v1/common.proto\"W\n" +
+	"\x1ekiddictionary/v1/message.proto\x12\x10kiddictionary.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x1dkiddictionary/v1/common.proto\x1a#kiddictionary/v1/conversation.proto\"\x96\x01\n" +
 	"\x12SendMessageRequest\x12'\n" +
 	"\x0fconversation_id\x18\x01 \x01(\tR\x0econversationId\x12\x18\n" +
-	"\acontent\x18\x02 \x01(\tR\acontent\"\x9b\x01\n" +
+	"\acontent\x18\x02 \x01(\tR\acontent\x12=\n" +
+	"\vage_bracket\x18\x03 \x01(\x0e2\x1c.kiddictionary.v1.AgeBracketR\n" +
+	"ageBracket\"\xdf\x01\n" +
 	"\x13SendMessageResponse\x12<\n" +
 	"\fuser_message\x18\x01 \x01(\v2\x19.kiddictionary.v1.MessageR\vuserMessage\x12F\n" +
-	"\x11assistant_message\x18\x02 \x01(\v2\x19.kiddictionary.v1.MessageR\x10assistantMessage2\xa6\x01\n" +
+	"\x11assistant_message\x18\x02 \x01(\v2\x19.kiddictionary.v1.MessageR\x10assistantMessage\x12B\n" +
+	"\fconversation\x18\x03 \x01(\v2\x1e.kiddictionary.v1.ConversationR\fconversation2\xa6\x01\n" +
 	"\x0eMessageService\x12\x93\x01\n" +
 	"\vSendMessage\x12$.kiddictionary.v1.SendMessageRequest\x1a%.kiddictionary.v1.SendMessageResponse\"7\x82\xd3\xe4\x93\x021:\x01*\",/kiddictionary.v1.MessageService/SendMessageB\xce\x01\n" +
 	"\x14com.kiddictionary.v1B\fMessageProtoP\x01ZGgithub.com/coreyvan/kid-dictionary/gen/kiddictionary/v1;kiddictionaryv1\xa2\x02\x03KXX\xaa\x02\x10Kiddictionary.V1\xca\x02\x10Kiddictionary\\V1\xe2\x02\x1cKiddictionary\\V1\\GPBMetadata\xea\x02\x11Kiddictionary::V1b\x06proto3"
@@ -157,18 +183,22 @@ var file_kiddictionary_v1_message_proto_msgTypes = make([]protoimpl.MessageInfo,
 var file_kiddictionary_v1_message_proto_goTypes = []any{
 	(*SendMessageRequest)(nil),  // 0: kiddictionary.v1.SendMessageRequest
 	(*SendMessageResponse)(nil), // 1: kiddictionary.v1.SendMessageResponse
-	(*Message)(nil),             // 2: kiddictionary.v1.Message
+	(AgeBracket)(0),             // 2: kiddictionary.v1.AgeBracket
+	(*Message)(nil),             // 3: kiddictionary.v1.Message
+	(*Conversation)(nil),        // 4: kiddictionary.v1.Conversation
 }
 var file_kiddictionary_v1_message_proto_depIdxs = []int32{
-	2, // 0: kiddictionary.v1.SendMessageResponse.user_message:type_name -> kiddictionary.v1.Message
-	2, // 1: kiddictionary.v1.SendMessageResponse.assistant_message:type_name -> kiddictionary.v1.Message
-	0, // 2: kiddictionary.v1.MessageService.SendMessage:input_type -> kiddictionary.v1.SendMessageRequest
-	1, // 3: kiddictionary.v1.MessageService.SendMessage:output_type -> kiddictionary.v1.SendMessageResponse
-	3, // [3:4] is the sub-list for method output_type
-	2, // [2:3] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	2, // 0: kiddictionary.v1.SendMessageRequest.age_bracket:type_name -> kiddictionary.v1.AgeBracket
+	3, // 1: kiddictionary.v1.SendMessageResponse.user_message:type_name -> kiddictionary.v1.Message
+	3, // 2: kiddictionary.v1.SendMessageResponse.assistant_message:type_name -> kiddictionary.v1.Message
+	4, // 3: kiddictionary.v1.SendMessageResponse.conversation:type_name -> kiddictionary.v1.Conversation
+	0, // 4: kiddictionary.v1.MessageService.SendMessage:input_type -> kiddictionary.v1.SendMessageRequest
+	1, // 5: kiddictionary.v1.MessageService.SendMessage:output_type -> kiddictionary.v1.SendMessageResponse
+	5, // [5:6] is the sub-list for method output_type
+	4, // [4:5] is the sub-list for method input_type
+	4, // [4:4] is the sub-list for extension type_name
+	4, // [4:4] is the sub-list for extension extendee
+	0, // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_kiddictionary_v1_message_proto_init() }
@@ -177,6 +207,7 @@ func file_kiddictionary_v1_message_proto_init() {
 		return
 	}
 	file_kiddictionary_v1_common_proto_init()
+	file_kiddictionary_v1_conversation_proto_init()
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

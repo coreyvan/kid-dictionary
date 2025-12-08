@@ -4,9 +4,10 @@ export {
   MessageRole,
   ContentTier,
   type User,
-  type Conversation,
   type Message,
 } from '@/gen/kiddictionary/v1/common_pb';
+
+export { type Conversation } from '@/gen/kiddictionary/v1/conversation_pb';
 
 // Frontend-specific state types
 
@@ -20,8 +21,8 @@ export interface AuthState {
 }
 
 export interface ConversationsState {
-  conversations: import('@/gen/kiddictionary/v1/common_pb').Conversation[];
-  currentConversation: import('@/gen/kiddictionary/v1/common_pb').Conversation | null;
+  conversations: import('@/gen/kiddictionary/v1/conversation_pb').Conversation[];
+  currentConversation: import('@/gen/kiddictionary/v1/conversation_pb').Conversation | null;
   isLoading: boolean;
   error: string | null;
   nextPageToken: string | null;

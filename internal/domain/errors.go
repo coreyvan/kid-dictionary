@@ -21,4 +21,7 @@ var (
 
 	// ErrContentTooLong is returned when message content exceeds maximum length.
 	ErrContentTooLong = errors.New("content exceeds maximum length")
+
+	// ErrAgeBracketRequired is returned when age_bracket is missing for new conversation creation.
+	ErrAgeBracketRequired = errors.New("age_bracket is required when conversation_id is not provided")
 )

@@ -13,6 +13,7 @@ import (
 const (
 	msgConversationNotFound = "The conversation you're looking for doesn't exist. Please start a new conversation."
 	msgInvalidAgeBracket    = "Please select a valid age bracket: Little Ones (0-5), Growing Minds (5-10), or Pre-Teens (10+)."
+	msgAgeBracketRequired   = "Please select an age bracket when starting a new conversation."
 	msgContentRequired      = "Please enter a question or concept you'd like help explaining."
 	msgContentTooLong       = "Your message is too long. Please keep it under 500 characters."
 	msgServiceUnavailable   = "We're having trouble connecting to our AI service. Please try again in a moment."
@@ -38,6 +39,9 @@ func MapError(err error) *connect.Error {
 	}
 	if errors.Is(err, domain.ErrInvalidAgeBracket) {
 		return connect.NewError(connect.CodeInvalidArgument, errors.New(msgInvalidAgeBracket))
+	}
+	if errors.Is(err, domain.ErrAgeBracketRequired) {
+		return connect.NewError(connect.CodeInvalidArgument, errors.New(msgAgeBracketRequired))
 	}
 	if errors.Is(err, domain.ErrTitleRequired) {
 		return connect.NewError(connect.CodeInvalidArgument, err)

@@ -47,10 +47,17 @@ func (m *mockMessageRepo) GetRecentByConversationID(ctx context.Context, convers
 
 // mockConversationRepo implements domain.ConversationRepository for testing.
 type mockConversationRepo struct {
+	createFn  func(ctx context.Context, conv *domain.Conversation) error
 	getByIDFn func(ctx context.Context, id uuid.UUID) (*domain.Conversation, error)
 }
 
 func (m *mockConversationRepo) Create(ctx context.Context, conv *domain.Conversation) error {
+	if m.createFn != nil {
+		return m.createFn(ctx, conv)
+	}
+	conv.ID = uuid.New()
+	conv.CreatedAt = time.Now()
+	conv.UpdatedAt = time.Now()
 	return nil
 }
 
@@ -78,7 +85,8 @@ func (m *mockConversationRepo) Delete(ctx context.Context, id uuid.UUID) error {
 
 // mockLLMProvider implements llm.Provider for testing.
 type mockLLMProvider struct {
-	completeFn func(ctx context.Context, req llm.CompletionRequest) (llm.CompletionResponse, error)
+	completeFn      func(ctx context.Context, req llm.CompletionRequest) (llm.CompletionResponse, error)
+	generateTitleFn func(ctx context.Context, content string) (string, error)
 }
 
 func (m *mockLLMProvider) Complete(ctx context.Context, req llm.CompletionRequest) (llm.CompletionResponse, error) {
@@ -90,6 +98,186 @@ func (m *mockLLMProvider) Complete(ctx context.Context, req llm.CompletionReques
 		TokensUsed: 10,
 	}, nil
 }
+
+func (m *mockLLMProvider) GenerateTitle(ctx context.Context, content string) (string, error) {
+	if m.generateTitleFn != nil {
+		return m.generateTitleFn(ctx, content)
+	}
+	return "Generated Title", nil
+}
+
+// Helper to get pointer to age bracket
+func ageBracketPtr(ab domain.AgeBracket) *domain.AgeBracket {
+	return &ab
+}
+
+// ============================================================================
+// User Story 1 Tests: Auto-Create Conversation
+// ============================================================================
+
+func TestSendMessage_AutoCreatesConversation(t *testing.T) {
+	msgRepo := &mockMessageRepo{}
+	var capturedConv *domain.Conversation
+	convRepo := &mockConversationRepo{
+		createFn: func(ctx context.Context, conv *domain.Conversation) error {
+			capturedConv = conv
+			conv.ID = uuid.New()
+			conv.CreatedAt = time.Now()
+			conv.UpdatedAt = time.Now()
+			return nil
+		},
+	}
+	llmProvider := &mockLLMProvider{
+		generateTitleFn: func(ctx context.Context, content string) (string, error) {
+			return "Sky Being Blue", nil
+		},
+	}
+
+	svc := message.NewService(msgRepo, convRepo, llmProvider, slog.Default())
+	result, err := svc.SendMessage(context.Background(), uuid.Nil, "Why is the sky blue?", ageBracketPtr(domain.AgeBracketLittleOnes))
+
+	require.NoError(t, err)
+	require.NotNil(t, result.Conversation)
+	assert.Equal(t, "Sky Being Blue", capturedConv.Title)
+	assert.Equal(t, domain.AgeBracketLittleOnes, capturedConv.AgeBracket)
+	assert.NotEqual(t, uuid.Nil, result.Conversation.ID)
+}
+
+func TestSendMessage_TitleGenerationFallback(t *testing.T) {
+	msgRepo := &mockMessageRepo{}
+	convRepo := &mockConversationRepo{}
+	llmProvider := &mockLLMProvider{
+		generateTitleFn: func(ctx context.Context, content string) (string, error) {
+			return "", errors.New("LLM unavailable")
+		},
+	}
+
+	svc := message.NewService(msgRepo, convRepo, llmProvider, slog.Default())
+	result, err := svc.SendMessage(context.Background(), uuid.Nil, "Why is the sky blue?", ageBracketPtr(domain.AgeBracketLittleOnes))
+
+	require.NoError(t, err)
+	require.NotNil(t, result.Conversation)
+	assert.Equal(t, "New Conversation", result.Conversation.Title)
+}
+
+func TestSendMessage_RequiresAgeBracketWhenNoConversationID(t *testing.T) {
+	svc := message.NewService(&mockMessageRepo{}, &mockConversationRepo{}, &mockLLMProvider{}, slog.Default())
+
+	// Test with nil age bracket
+	_, err := svc.SendMessage(context.Background(), uuid.Nil, "Why is the sky blue?", nil)
+	assert.ErrorIs(t, err, domain.ErrAgeBracketRequired)
+
+	// Test with unspecified age bracket
+	_, err = svc.SendMessage(context.Background(), uuid.Nil, "Why is the sky blue?", ageBracketPtr(domain.AgeBracketUnspecified))
+	assert.ErrorIs(t, err, domain.ErrAgeBracketRequired)
+}
+
+// ============================================================================
+// User Story 2 Tests: Follow-up Messages
+// ============================================================================
+
+func TestSendMessage_FollowUpWithAutoCreatedConversation(t *testing.T) {
+	autoCreatedConvID := uuid.New()
+	msgRepo := &mockMessageRepo{}
+	convRepo := &mockConversationRepo{
+		createFn: func(ctx context.Context, conv *domain.Conversation) error {
+			conv.ID = autoCreatedConvID
+			conv.CreatedAt = time.Now()
+			conv.UpdatedAt = time.Now()
+			return nil
+		},
+		getByIDFn: func(ctx context.Context, id uuid.UUID) (*domain.Conversation, error) {
+			if id == autoCreatedConvID {
+				return &domain.Conversation{
+					ID:         autoCreatedConvID,
+					Title:      "Sky Being Blue",
+					AgeBracket: domain.AgeBracketLittleOnes,
+				}, nil
+			}
+			return nil, domain.ErrNotFound
+		},
+	}
+	llmProvider := &mockLLMProvider{
+		generateTitleFn: func(ctx context.Context, content string) (string, error) {
+			return "Sky Being Blue", nil
+		},
+	}
+
+	svc := message.NewService(msgRepo, convRepo, llmProvider, slog.Default())
+
+	// First message auto-creates conversation
+	result1, err := svc.SendMessage(context.Background(), uuid.Nil, "Why is the sky blue?", ageBracketPtr(domain.AgeBracketLittleOnes))
+	require.NoError(t, err)
+	require.NotNil(t, result1.Conversation)
+
+	// Follow-up message uses the returned conversation ID
+	result2, err := svc.SendMessage(context.Background(), result1.Conversation.ID, "Tell me more", nil)
+	require.NoError(t, err)
+	assert.Nil(t, result2.Conversation) // Should not return conversation for existing conv
+	assert.Equal(t, result1.Conversation.ID, result2.UserMessage.ConversationID)
+}
+
+// ============================================================================
+// User Story 3 Tests: Backwards Compatibility
+// ============================================================================
+
+func TestSendMessage_ExistingConversation_NoAutoCreate(t *testing.T) {
+	existingConvID := uuid.New()
+	msgRepo := &mockMessageRepo{}
+	convRepo := &mockConversationRepo{
+		getByIDFn: func(ctx context.Context, id uuid.UUID) (*domain.Conversation, error) {
+			return &domain.Conversation{
+				ID:         existingConvID,
+				Title:      "Existing Conversation",
+				AgeBracket: domain.AgeBracketGrowingMinds,
+			}, nil
+		},
+	}
+	llmProvider := &mockLLMProvider{}
+
+	svc := message.NewService(msgRepo, convRepo, llmProvider, slog.Default())
+	result, err := svc.SendMessage(context.Background(), existingConvID, "Why is the sky blue?", nil)
+
+	require.NoError(t, err)
+	assert.Nil(t, result.Conversation) // No conversation returned for existing conv
+	assert.NotNil(t, result.UserMessage)
+	assert.NotNil(t, result.AssistantMessage)
+}
+
+func TestSendMessage_ExistingConversation_IgnoresAgeBracket(t *testing.T) {
+	existingConvID := uuid.New()
+	msgRepo := &mockMessageRepo{}
+	convRepo := &mockConversationRepo{
+		getByIDFn: func(ctx context.Context, id uuid.UUID) (*domain.Conversation, error) {
+			return &domain.Conversation{
+				ID:         existingConvID,
+				Title:      "Existing Conversation",
+				AgeBracket: domain.AgeBracketGrowingMinds, // Conversation has GrowingMinds
+			}, nil
+		},
+	}
+
+	var capturedAgeBracket llm.AgeBracket
+	llmProvider := &mockLLMProvider{
+		completeFn: func(ctx context.Context, req llm.CompletionRequest) (llm.CompletionResponse, error) {
+			capturedAgeBracket = req.AgeBracket
+			return llm.CompletionResponse{Content: "Response", TokensUsed: 10}, nil
+		},
+	}
+
+	svc := message.NewService(msgRepo, convRepo, llmProvider, slog.Default())
+
+	// Pass PreTeens age bracket but conversation is GrowingMinds
+	_, err := svc.SendMessage(context.Background(), existingConvID, "Why is the sky blue?", ageBracketPtr(domain.AgeBracketPreTeens))
+
+	require.NoError(t, err)
+	// Should use conversation's age bracket (GrowingMinds), not the passed one (PreTeens)
+	assert.Equal(t, llm.AgeBracketGrowingMinds, capturedAgeBracket)
+}
+
+// ============================================================================
+// Existing Tests (Updated for new signature)
+// ============================================================================
 
 func TestService_SendMessage_FollowUpContext(t *testing.T) {
 	convID := uuid.New()
@@ -132,7 +320,7 @@ func TestService_SendMessage_FollowUpContext(t *testing.T) {
 	}
 
 	svc := message.NewService(msgRepo, convRepo, llmProvider, slog.Default())
-	result, err := svc.SendMessage(context.Background(), convID, "Tell me more about that")
+	result, err := svc.SendMessage(context.Background(), convID, "Tell me more about that", nil)
 
 	require.NoError(t, err)
 	assert.NotNil(t, result)
@@ -189,7 +377,7 @@ func TestService_SendMessage_AgeBracketVariation(t *testing.T) {
 			}
 
 			svc := message.NewService(msgRepo, convRepo, llmProvider, slog.Default())
-			_, err := svc.SendMessage(context.Background(), convID, "Why is the sky blue?")
+			_, err := svc.SendMessage(context.Background(), convID, "Why is the sky blue?", nil)
 
 			require.NoError(t, err)
 			assert.Equal(t, tc.expectedLLMAge, capturedAgeBracket, "LLM should receive correct age bracket")
@@ -218,7 +406,7 @@ func TestService_SendMessage_SensitiveTopic(t *testing.T) {
 	}
 
 	svc := message.NewService(msgRepo, convRepo, llmProvider, slog.Default())
-	result, err := svc.SendMessage(context.Background(), convID, "How do I explain death to my child?")
+	result, err := svc.SendMessage(context.Background(), convID, "How do I explain death to my child?", nil)
 
 	require.NoError(t, err)
 	assert.Equal(t, domain.ContentTierSensitive, result.AssistantMessage.ContentTier)
@@ -240,7 +428,7 @@ func TestService_SendMessage_ContextualTopic(t *testing.T) {
 	llmProvider := &mockLLMProvider{}
 
 	svc := message.NewService(msgRepo, convRepo, llmProvider, slog.Default())
-	result, err := svc.SendMessage(context.Background(), convID, "What is religion?")
+	result, err := svc.SendMessage(context.Background(), convID, "What is religion?", nil)
 
 	require.NoError(t, err)
 	assert.Equal(t, domain.ContentTierContextual, result.AssistantMessage.ContentTier)
@@ -261,7 +449,7 @@ func TestService_SendMessage_OffPurposeRequest(t *testing.T) {
 	llmProvider := &mockLLMProvider{}
 
 	svc := message.NewService(msgRepo, convRepo, llmProvider, slog.Default())
-	result, err := svc.SendMessage(context.Background(), convID, "Write me a poem about cats")
+	result, err := svc.SendMessage(context.Background(), convID, "Write me a poem about cats", nil)
 
 	require.NoError(t, err)
 	assert.Equal(t, domain.ContentTierRedirect, result.AssistantMessage.ContentTier)
@@ -291,7 +479,7 @@ func TestService_SendMessage(t *testing.T) {
 		}
 
 		svc := message.NewService(msgRepo, convRepo, llmProvider, slog.Default())
-		result, err := svc.SendMessage(context.Background(), convID, "Why is the sky blue?")
+		result, err := svc.SendMessage(context.Background(), convID, "Why is the sky blue?", nil)
 
 		require.NoError(t, err)
 		assert.NotNil(t, result.UserMessage)
@@ -305,7 +493,7 @@ func TestService_SendMessage(t *testing.T) {
 	t.Run("error with empty content", func(t *testing.T) {
 		svc := message.NewService(&mockMessageRepo{}, &mockConversationRepo{}, &mockLLMProvider{}, slog.Default())
 
-		_, err := svc.SendMessage(context.Background(), uuid.New(), "")
+		_, err := svc.SendMessage(context.Background(), uuid.New(), "", nil)
 
 		assert.ErrorIs(t, err, domain.ErrEmptyContent)
 	})
@@ -318,7 +506,7 @@ func TestService_SendMessage(t *testing.T) {
 			longContent[i] = 'a'
 		}
 
-		_, err := svc.SendMessage(context.Background(), uuid.New(), string(longContent))
+		_, err := svc.SendMessage(context.Background(), uuid.New(), string(longContent), nil)
 
 		assert.ErrorIs(t, err, domain.ErrContentTooLong)
 	})
@@ -331,7 +519,7 @@ func TestService_SendMessage(t *testing.T) {
 		}
 		svc := message.NewService(&mockMessageRepo{}, convRepo, &mockLLMProvider{}, slog.Default())
 
-		_, err := svc.SendMessage(context.Background(), uuid.New(), "Hello")
+		_, err := svc.SendMessage(context.Background(), uuid.New(), "Hello", nil)
 
 		assert.ErrorIs(t, err, domain.ErrConversationNotFound)
 	})
@@ -345,7 +533,7 @@ func TestService_SendMessage(t *testing.T) {
 		}
 		svc := message.NewService(&mockMessageRepo{}, &mockConversationRepo{}, llmProvider, slog.Default())
 
-		_, err := svc.SendMessage(context.Background(), uuid.New(), "Hello")
+		_, err := svc.SendMessage(context.Background(), uuid.New(), "Hello", nil)
 
 		assert.Error(t, err)
 	})

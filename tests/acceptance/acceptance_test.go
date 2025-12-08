@@ -30,6 +30,9 @@ func TestSendMessageHappyPath(t *testing.T) {
 				TokensUsed: 10,
 			}, nil
 		},
+		GenerateTitleFunc: func(ctx context.Context, content string) (string, error) {
+			return "Generated Title", nil
+		},
 	}
 
 	// Start test server with mock dependencies
@@ -87,6 +90,9 @@ func TestConversationCreation(t *testing.T) {
 	mockLLM := &llm.ProviderMock{
 		CompleteFunc: func(ctx context.Context, req llm.CompletionRequest) (llm.CompletionResponse, error) {
 			return llm.CompletionResponse{Content: "unused", TokensUsed: 10}, nil
+		},
+		GenerateTitleFunc: func(ctx context.Context, content string) (string, error) {
+			return "Generated Title", nil
 		},
 	}
 
@@ -177,6 +183,9 @@ func TestMockResponseCustomization(t *testing.T) {
 				TokensUsed: 10,
 			}, nil
 		},
+		GenerateTitleFunc: func(ctx context.Context, content string) (string, error) {
+			return "Generated Title", nil
+		},
 	}
 
 	// Start test server
@@ -217,4 +226,157 @@ func TestMockResponseCustomization(t *testing.T) {
 
 	// Verify mock was called exactly once
 	assert.Len(t, mockLLM.CompleteCalls(), 1)
+}
+
+// ============================================================================
+// User Story 1 Tests: Auto-Create Conversation E2E
+// ============================================================================
+
+// TestSendMessage_AutoCreate_E2E verifies the end-to-end auto-creation flow:
+// send a message without conversation_id, verify conversation is auto-created with LLM-generated title.
+func TestSendMessage_AutoCreate_E2E(t *testing.T) {
+	pool := testutil.NewTestDB(t)
+
+	mockLLM := &llm.ProviderMock{
+		CompleteFunc: func(ctx context.Context, req llm.CompletionRequest) (llm.CompletionResponse, error) {
+			return llm.CompletionResponse{
+				Content:    "Leaves change color because of chemical changes!",
+				TokensUsed: 10,
+			}, nil
+		},
+		GenerateTitleFunc: func(ctx context.Context, content string) (string, error) {
+			return "Leaves Changing Color", nil
+		},
+	}
+
+	server := testutil.NewTestServer(t, pool, mockLLM)
+	msgClient := kiddictionaryv1connect.NewMessageServiceClient(http.DefaultClient, server.URL)
+
+	ctx := context.Background()
+
+	// Send request without conversation_id
+	resp, err := msgClient.SendMessage(ctx, connect.NewRequest(&v1.SendMessageRequest{
+		Content:    "Why do leaves change color?",
+		AgeBracket: v1.AgeBracket_AGE_BRACKET_LITTLE_ONES,
+	}))
+
+	// Verify response includes conversation
+	require.NoError(t, err)
+	require.NotNil(t, resp.Msg.Conversation)
+	assert.NotEmpty(t, resp.Msg.Conversation.Id)
+	assert.Equal(t, "Leaves Changing Color", resp.Msg.Conversation.Title)
+	assert.Equal(t, v1.AgeBracket_AGE_BRACKET_LITTLE_ONES, resp.Msg.Conversation.AgeBracket)
+
+	// Verify messages
+	require.NotNil(t, resp.Msg.UserMessage)
+	require.NotNil(t, resp.Msg.AssistantMessage)
+	assert.Equal(t, "Why do leaves change color?", resp.Msg.UserMessage.Content)
+	assert.Contains(t, resp.Msg.AssistantMessage.Content, "chemical changes")
+
+	// Verify GenerateTitle was called
+	assert.Len(t, mockLLM.GenerateTitleCalls(), 1)
+	assert.Equal(t, "Why do leaves change color?", mockLLM.GenerateTitleCalls()[0].Content)
+}
+
+// ============================================================================
+// User Story 2 Tests: Follow-up After Auto-Create E2E
+// ============================================================================
+
+// TestSendMessage_FollowUp_AfterAutoCreate verifies that follow-up messages work correctly
+// after auto-creating a conversation.
+func TestSendMessage_FollowUp_AfterAutoCreate(t *testing.T) {
+	pool := testutil.NewTestDB(t)
+
+	mockLLM := &llm.ProviderMock{
+		CompleteFunc: func(ctx context.Context, req llm.CompletionRequest) (llm.CompletionResponse, error) {
+			return llm.CompletionResponse{
+				Content:    "Here's more info about that!",
+				TokensUsed: 10,
+			}, nil
+		},
+		GenerateTitleFunc: func(ctx context.Context, content string) (string, error) {
+			return "Auto Created Title", nil
+		},
+	}
+
+	server := testutil.NewTestServer(t, pool, mockLLM)
+	msgClient := kiddictionaryv1connect.NewMessageServiceClient(http.DefaultClient, server.URL)
+
+	ctx := context.Background()
+
+	// First message auto-creates conversation
+	resp1, err := msgClient.SendMessage(ctx, connect.NewRequest(&v1.SendMessageRequest{
+		Content:    "Why is the sky blue?",
+		AgeBracket: v1.AgeBracket_AGE_BRACKET_GROWING_MINDS,
+	}))
+	require.NoError(t, err)
+	require.NotNil(t, resp1.Msg.Conversation)
+	conversationID := resp1.Msg.Conversation.Id
+
+	// Follow-up message uses the returned conversation ID
+	resp2, err := msgClient.SendMessage(ctx, connect.NewRequest(&v1.SendMessageRequest{
+		ConversationId: conversationID,
+		Content:        "Tell me more about that",
+	}))
+	require.NoError(t, err)
+
+	// Verify follow-up response does NOT include conversation
+	assert.Nil(t, resp2.Msg.Conversation)
+
+	// Verify messages are linked to same conversation
+	assert.Equal(t, conversationID, resp2.Msg.UserMessage.ConversationId)
+	assert.Equal(t, conversationID, resp2.Msg.AssistantMessage.ConversationId)
+}
+
+// ============================================================================
+// User Story 3 Tests: Backwards Compatibility E2E
+// ============================================================================
+
+// TestSendMessage_ExistingFlow_Unchanged verifies that clients that explicitly create
+// conversations continue to work unchanged.
+func TestSendMessage_ExistingFlow_Unchanged(t *testing.T) {
+	pool := testutil.NewTestDB(t)
+
+	mockLLM := &llm.ProviderMock{
+		CompleteFunc: func(ctx context.Context, req llm.CompletionRequest) (llm.CompletionResponse, error) {
+			return llm.CompletionResponse{
+				Content:    "Existing flow response!",
+				TokensUsed: 10,
+			}, nil
+		},
+		GenerateTitleFunc: func(ctx context.Context, content string) (string, error) {
+			return "Should Not Be Called", nil
+		},
+	}
+
+	server := testutil.NewTestServer(t, pool, mockLLM)
+	convClient := kiddictionaryv1connect.NewConversationServiceClient(http.DefaultClient, server.URL)
+	msgClient := kiddictionaryv1connect.NewMessageServiceClient(http.DefaultClient, server.URL)
+
+	ctx := context.Background()
+
+	// Step 1: Create conversation explicitly
+	createResp, err := convClient.CreateConversation(ctx, connect.NewRequest(&v1.CreateConversationRequest{
+		Title:      "Explicit Conversation",
+		AgeBracket: v1.AgeBracket_AGE_BRACKET_PRE_TEENS,
+	}))
+	require.NoError(t, err)
+	conversationID := createResp.Msg.Conversation.Id
+
+	// Step 2: Send message with that ID
+	sendResp, err := msgClient.SendMessage(ctx, connect.NewRequest(&v1.SendMessageRequest{
+		ConversationId: conversationID,
+		Content:        "What is quantum mechanics?",
+	}))
+	require.NoError(t, err)
+
+	// Verify no auto-creation occurred
+	assert.Nil(t, sendResp.Msg.Conversation)
+
+	// Verify GenerateTitle was NOT called (no auto-create)
+	assert.Len(t, mockLLM.GenerateTitleCalls(), 0)
+
+	// Verify message response is normal
+	assert.NotNil(t, sendResp.Msg.UserMessage)
+	assert.NotNil(t, sendResp.Msg.AssistantMessage)
 }

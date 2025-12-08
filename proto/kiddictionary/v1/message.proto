@@ -4,10 +4,12 @@ package kiddictionary.v1;
 
 import "google/api/annotations.proto";
 import "kiddictionary/v1/common.proto";
+import "kiddictionary/v1/conversation.proto";
 
 // MessageService handles sending and receiving messages.
 service MessageService {
   // SendMessage sends a user message and receives an AI response.
+  // If conversation_id is empty, a new conversation is auto-created.
   rpc SendMessage(SendMessageRequest) returns (SendMessageResponse) {
     option (google.api.http) = {
       post: "/kiddictionary.v1.MessageService/SendMessage"
@@ -17,11 +19,23 @@ service MessageService {
 }
 
 message SendMessageRequest {
+  // conversation_id is optional. If empty, a new conversation is auto-created.
+  // When empty, age_bracket must be provided.
   string conversation_id = 1;
+
+  // content is required. Must be 1-500 characters.
   string content = 2;
+
+  // age_bracket is required when conversation_id is empty.
+  // Ignored when conversation_id is provided.
+  AgeBracket age_bracket = 3;
 }
 
 message SendMessageResponse {
   Message user_message = 1;
   Message assistant_message = 2;
+
+  // conversation is present when a new conversation was auto-created.
+  // Clients should use conversation.id for subsequent messages.
+  Conversation conversation = 3;
 }

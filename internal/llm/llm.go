@@ -1,5 +1,6 @@
 package llm
 
+//go:generate rm -f provider_mock.go
 //go:generate moq -out provider_mock.go . Provider
 
 import (
@@ -49,4 +50,7 @@ type CompletionResponse struct {
 // Provider defines the interface for LLM interactions.
 type Provider interface {
 	Complete(ctx context.Context, req CompletionRequest) (CompletionResponse, error)
+	// GenerateTitle generates a 3-4 word title from the given message content.
+	// Returns a fallback title on error, or an error if even that fails.
+	GenerateTitle(ctx context.Context, content string) (string, error)
 }

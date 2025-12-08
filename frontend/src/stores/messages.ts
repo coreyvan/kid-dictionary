@@ -110,22 +110,28 @@ export const useMessagesStore = defineStore('messages', () => {
     try {
       isLoading.value = true
 
-      // If no conversation yet, create one (anonymous or authenticated)
-      if (!currentConversationId.value) {
-        if (!authStore.isAuthenticated) {
-          // Create anonymous conversation
-          const title = content.slice(0, 50) + (content.length > 50 ? '...' : '')
-          const conv = createAnonymousConversation(title, currentAgeBracket.value)
-          currentConversationId.value = conv.id
-        }
-        // For authenticated users, the conversation will be created by the backend
-      }
+      const isNewConversation = !currentConversationId.value
 
-      // Send to API
-      const result = await apiSendMessage(
-        currentConversationId.value || '',
-        content
-      )
+      // Send to API - include ageBracket when no conversationId (backend will auto-create)
+      const result = await apiSendMessage(content, {
+        conversationId: currentConversationId.value || undefined,
+        ageBracket: isNewConversation ? currentAgeBracket.value : undefined,
+      })
+
+      // If conversation was auto-created by backend, capture the ID
+      if (result.conversation) {
+        currentConversationId.value = result.conversation.id
+
+        // For anonymous users, also save to local storage
+        if (!authStore.isAuthenticated) {
+          createAnonymousConversation(
+            result.conversation.id,
+            result.conversation.title || content.slice(0, 50),
+            currentAgeBracket.value
+          )
+          setCurrentAnonymousConversationId(result.conversation.id)
+        }
+      }
 
       // Clear pending and add real messages
       pendingMessage.value = null
@@ -136,7 +142,7 @@ export const useMessagesStore = defineStore('messages', () => {
       // Add assistant message
       messages.value.push(result.assistantMessage)
 
-      // Save to anonymous storage if not authenticated
+      // Save messages to anonymous storage if not authenticated
       if (!authStore.isAuthenticated && currentConversationId.value) {
         addMessageToAnonymousConversation(currentConversationId.value, result.userMessage)
         addMessageToAnonymousConversation(currentConversationId.value, result.assistantMessage)

@@ -3,7 +3,18 @@ syntax = "proto3";
 package kiddictionary.v1;
 
 import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
 import "kiddictionary/v1/common.proto";
+
+// Conversation represents a chat session.
+message Conversation {
+  string id = 1;
+  string user_id = 2;
+  string title = 3;
+  AgeBracket age_bracket = 4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp updated_at = 6;
+}
 
 // ConversationService handles conversation management.
 service ConversationService {

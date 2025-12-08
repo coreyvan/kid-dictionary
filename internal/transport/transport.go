@@ -315,17 +315,30 @@ func (s *server) DeleteConversation(ctx context.Context, req *connect.Request[v1
 }
 
 func (s *server) SendMessage(ctx context.Context, req *connect.Request[v1.SendMessageRequest]) (*connect.Response[v1.SendMessageResponse], error) {
-	conversationID, err := uuid.Parse(req.Msg.ConversationId)
-	if err != nil {
-		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("invalid conversation_id"))
+	var conversationID uuid.UUID
+	var err error
+
+	// Parse conversation_id if provided; uuid.Nil signals auto-creation
+	if req.Msg.ConversationId != "" {
+		conversationID, err = uuid.Parse(req.Msg.ConversationId)
+		if err != nil {
+			return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("invalid conversation_id"))
+		}
 	}
 
-	result, err := s.messageSvc.SendMessage(ctx, conversationID, req.Msg.Content)
+	// Extract age_bracket for auto-creation (only used when conversation_id is empty)
+	var ageBracket *domain.AgeBracket
+	if req.Msg.AgeBracket != v1.AgeBracket_AGE_BRACKET_UNSPECIFIED {
+		ab := domain.AgeBracket(req.Msg.AgeBracket)
+		ageBracket = &ab
+	}
+
+	result, err := s.messageSvc.SendMessage(ctx, conversationID, req.Msg.Content, ageBracket)
 	if err != nil {
 		return nil, intconnect.MapError(err)
 	}
 
-	return connect.NewResponse(&v1.SendMessageResponse{
+	resp := &v1.SendMessageResponse{
 		UserMessage: &v1.Message{
 			Id:             result.UserMessage.ID.String(),
 			ConversationId: result.UserMessage.ConversationID.String(),
@@ -341,5 +354,18 @@ func (s *server) SendMessage(ctx context.Context, req *connect.Request[v1.SendMe
 			ContentTier:    v1.ContentTier(result.AssistantMessage.ContentTier),
 			CreatedAt:      timestamppb.New(result.AssistantMessage.CreatedAt),
 		},
-	}), nil
+	}
+
+	// Include conversation in response if it was auto-created
+	if result.Conversation != nil {
+		resp.Conversation = &v1.Conversation{
+			Id:         result.Conversation.ID.String(),
+			Title:      result.Conversation.Title,
+			AgeBracket: v1.AgeBracket(result.Conversation.AgeBracket),
+			CreatedAt:  timestamppb.New(result.Conversation.CreatedAt),
+			UpdatedAt:  timestamppb.New(result.Conversation.UpdatedAt),
+		}
+	}
+
+	return connect.NewResponse(resp), nil
 }
