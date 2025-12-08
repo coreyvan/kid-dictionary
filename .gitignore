@@ -33,3 +33,13 @@ dist/
 
 # Mocks
 *_mock.go
+
+# Node.js / Frontend
+node_modules/
+frontend/dist/
+frontend/.vite/
+*.log
+.pnpm-debug.log*
+
+# Frontend build artifacts
+frontend/src/gen/

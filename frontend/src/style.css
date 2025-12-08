@@ -1,0 +1,22 @@
+@import "tailwindcss";
+
+/* Custom theme for Kid Dictionary */
+@theme {
+  /* Age bracket colors */
+  --color-bracket-little: #FFB347;    /* Warm orange (0-5 years) */
+  --color-bracket-growing: #77DD77;   /* Bright green (5-10 years) */
+  --color-bracket-preteen: #6CA0DC;   /* Confident blue (10+ years) */
+
+  /* Touch target minimum size */
+  --spacing-touch: 44px;
+}
+
+/* Base styles */
+body {
+  @apply bg-white text-gray-900 antialiased;
+  min-height: 100vh;
+}
+
+#app {
+  @apply min-h-screen;
+}

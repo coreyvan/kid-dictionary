@@ -82,6 +82,14 @@ tasks:
       - go generate ./internal/llm/...
       - echo "Mock implementations generated."
 
+  generate:ts:
+    desc: Generate TypeScript client from protobuf definitions
+    dir: frontend
+    cmds:
+      - rm -rf src/gen
+      - buf generate
+      - echo "TypeScript client generated."
+
   lint:proto:
     desc: Lint protobuf definitions
     cmds:
