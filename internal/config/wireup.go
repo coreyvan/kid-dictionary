@@ -4,6 +4,8 @@ import (
 	"context"
 	"log/slog"
 
+	"github.com/jackc/pgx/v5/pgxpool"
+
 	"github.com/coreyvan/kid-dictionary/internal/domain"
 	"github.com/coreyvan/kid-dictionary/internal/llm"
 	convrepo "github.com/coreyvan/kid-dictionary/internal/repository/conversation"
@@ -11,7 +13,6 @@ import (
 	convsvc "github.com/coreyvan/kid-dictionary/internal/service/conversation"
 	msgsvc "github.com/coreyvan/kid-dictionary/internal/service/message"
 	"github.com/coreyvan/kid-dictionary/internal/transport"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type Wireup struct {
@@ -136,7 +137,7 @@ func (w *Wireup) MustProvideMessageService() *msgsvc.Service {
 	msgRepo := w.MustProvideMessageRepo()
 	convRepo := w.MustProvideConversationRepo()
 	llmProvider := w.MustProvideLLMProvider()
-	svc := msgsvc.NewService(msgRepo, convRepo, llmProvider)
+	svc := msgsvc.NewService(msgRepo, convRepo, llmProvider, &w.logger)
 	w.Deps.MessageService = svc
 	return svc
 }

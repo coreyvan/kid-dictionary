@@ -3,6 +3,7 @@ package message
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"time"
 
 	"github.com/google/uuid"
@@ -19,6 +20,7 @@ const (
 
 // Service handles message business logic.
 type Service struct {
+	logger           *slog.Logger
 	messageRepo      domain.MessageRepository
 	conversationRepo domain.ConversationRepository
 	llmProvider      llm.Provider
@@ -26,8 +28,9 @@ type Service struct {
 }
 
 // NewService creates a new message service.
-func NewService(messageRepo domain.MessageRepository, conversationRepo domain.ConversationRepository, llmProvider llm.Provider) *Service {
+func NewService(messageRepo domain.MessageRepository, conversationRepo domain.ConversationRepository, llmProvider llm.Provider, l *slog.Logger) *Service {
 	return &Service{
+		logger:           l,
 		messageRepo:      messageRepo,
 		conversationRepo: conversationRepo,
 		llmProvider:      llmProvider,
@@ -55,6 +58,7 @@ func (s *Service) SendMessage(ctx context.Context, conversationID uuid.UUID, con
 	}
 
 	// Get conversation to determine age bracket
+	s.logger.Debug("SendMessage", "content", content)
 	conv, err := s.conversationRepo.GetByID(ctx, conversationID)
 	if err != nil {
 		if errors.Is(err, domain.ErrNotFound) {

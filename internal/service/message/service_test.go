@@ -3,6 +3,7 @@ package message_test
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"testing"
 	"time"
 
@@ -130,7 +131,7 @@ func TestService_SendMessage_FollowUpContext(t *testing.T) {
 		},
 	}
 
-	svc := message.NewService(msgRepo, convRepo, llmProvider)
+	svc := message.NewService(msgRepo, convRepo, llmProvider, slog.Default())
 	result, err := svc.SendMessage(context.Background(), convID, "Tell me more about that")
 
 	require.NoError(t, err)
@@ -187,7 +188,7 @@ func TestService_SendMessage_AgeBracketVariation(t *testing.T) {
 				},
 			}
 
-			svc := message.NewService(msgRepo, convRepo, llmProvider)
+			svc := message.NewService(msgRepo, convRepo, llmProvider, slog.Default())
 			_, err := svc.SendMessage(context.Background(), convID, "Why is the sky blue?")
 
 			require.NoError(t, err)
@@ -216,7 +217,7 @@ func TestService_SendMessage_SensitiveTopic(t *testing.T) {
 		},
 	}
 
-	svc := message.NewService(msgRepo, convRepo, llmProvider)
+	svc := message.NewService(msgRepo, convRepo, llmProvider, slog.Default())
 	result, err := svc.SendMessage(context.Background(), convID, "How do I explain death to my child?")
 
 	require.NoError(t, err)
@@ -238,7 +239,7 @@ func TestService_SendMessage_ContextualTopic(t *testing.T) {
 	}
 	llmProvider := &mockLLMProvider{}
 
-	svc := message.NewService(msgRepo, convRepo, llmProvider)
+	svc := message.NewService(msgRepo, convRepo, llmProvider, slog.Default())
 	result, err := svc.SendMessage(context.Background(), convID, "What is religion?")
 
 	require.NoError(t, err)
@@ -259,7 +260,7 @@ func TestService_SendMessage_OffPurposeRequest(t *testing.T) {
 	}
 	llmProvider := &mockLLMProvider{}
 
-	svc := message.NewService(msgRepo, convRepo, llmProvider)
+	svc := message.NewService(msgRepo, convRepo, llmProvider, slog.Default())
 	result, err := svc.SendMessage(context.Background(), convID, "Write me a poem about cats")
 
 	require.NoError(t, err)
@@ -289,7 +290,7 @@ func TestService_SendMessage(t *testing.T) {
 			},
 		}
 
-		svc := message.NewService(msgRepo, convRepo, llmProvider)
+		svc := message.NewService(msgRepo, convRepo, llmProvider, slog.Default())
 		result, err := svc.SendMessage(context.Background(), convID, "Why is the sky blue?")
 
 		require.NoError(t, err)
@@ -302,7 +303,7 @@ func TestService_SendMessage(t *testing.T) {
 	})
 
 	t.Run("error with empty content", func(t *testing.T) {
-		svc := message.NewService(&mockMessageRepo{}, &mockConversationRepo{}, &mockLLMProvider{})
+		svc := message.NewService(&mockMessageRepo{}, &mockConversationRepo{}, &mockLLMProvider{}, slog.Default())
 
 		_, err := svc.SendMessage(context.Background(), uuid.New(), "")
 
@@ -310,7 +311,7 @@ func TestService_SendMessage(t *testing.T) {
 	})
 
 	t.Run("error with content too long", func(t *testing.T) {
-		svc := message.NewService(&mockMessageRepo{}, &mockConversationRepo{}, &mockLLMProvider{})
+		svc := message.NewService(&mockMessageRepo{}, &mockConversationRepo{}, &mockLLMProvider{}, slog.Default())
 
 		longContent := make([]byte, 501)
 		for i := range longContent {
@@ -328,7 +329,7 @@ func TestService_SendMessage(t *testing.T) {
 				return nil, domain.ErrNotFound
 			},
 		}
-		svc := message.NewService(&mockMessageRepo{}, convRepo, &mockLLMProvider{})
+		svc := message.NewService(&mockMessageRepo{}, convRepo, &mockLLMProvider{}, slog.Default())
 
 		_, err := svc.SendMessage(context.Background(), uuid.New(), "Hello")
 
@@ -342,7 +343,7 @@ func TestService_SendMessage(t *testing.T) {
 				return llm.CompletionResponse{}, llmErr
 			},
 		}
-		svc := message.NewService(&mockMessageRepo{}, &mockConversationRepo{}, llmProvider)
+		svc := message.NewService(&mockMessageRepo{}, &mockConversationRepo{}, llmProvider, slog.Default())
 
 		_, err := svc.SendMessage(context.Background(), uuid.New(), "Hello")
 
